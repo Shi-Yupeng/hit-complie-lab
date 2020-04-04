@@ -5,7 +5,7 @@ import re
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from UI.MainWindowtest import Ui_Form
-from token import Token
+from tokens import Token
 
 ##DFA, NFA的相互转换
 class State():
@@ -251,7 +251,7 @@ class LexicalAnalyzer(object):
 
             if acept_string == "": #如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
                 err = True
-                print("===========",left)
+                # print("===========",left)
                 error_str += left[0]
                 left = left[1:]
 
