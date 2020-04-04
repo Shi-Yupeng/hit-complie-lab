@@ -1,6 +1,8 @@
 
 
-unique = ['if','else','do','while','printf']
+unique = ['if','else','do','while','printf',
+          "int",'switch','case','default','for',
+          'return','proc','char','call','record']
 class Token(object):
     def __init__(self,string, kindline,rownumber):
         self.rownumber = rownumber
@@ -22,9 +24,15 @@ class Token(object):
                    "<" + "{:20}".format(self.kind) + \
                    "," + "{:20}".format("_") + ">" + self.error()
         if not self.value is None:
-            return "{:20}".format(self.string) + \
+            t = self.value
+            s = "{:20}".format(self.string)
+            if self.kind == "CMT":
+                if len(self.value) > 8:
+                    t = self.value[:3] + "..." + self.value[-3:]
+                s = self.string + '\n' + "{:20}".format('')
+            return s + \
                    "<" + "{:20}".format(self.kind) + \
-                   "," + "{:20}".format(self.value) + ">" + self.error()
+                   "," + "{:20}".format(t) + ">" + self.error()
     def error(self):
         if self.illegal == True:
             return "illegal string at row " + str(self.rownumber) + ":" + self.string

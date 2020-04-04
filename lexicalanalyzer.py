@@ -108,7 +108,7 @@ class DFA(object):
 
         for i in range(len(string)):
             c = string[i]
-            if u'\u4e00'< c <u'\u9fa5':
+            if u'\u4e00'<= c <= u'\u9fa5' or c == "，" or c == '；' or c == '。' or c == '、':
                 c = "a"
             if s.is_final:
                 acpt = i
@@ -234,7 +234,7 @@ class LexicalAnalyzer(object):
         tkn = TokenMaker("source/token.txt")
         token_list = []
         error_str = ""
-        rownumber = 0 #记录行号
+        rownumber = 1 #记录行号
         while string != "": #String存放的是每次处理之后，剩下的串
             acept_string, state, left = dfa.firstStringAccept(string)
             err = False
@@ -242,8 +242,12 @@ class LexicalAnalyzer(object):
             if left != "":
                 while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
                     if left[0] == "\n":
+                        left = left[1:]
                         rownumber += 1
-                    left = str(left).lstrip()
+                    else:
+                        left = left[1:]
+                    if left == "":
+                        break
 
             if acept_string == "": #如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
                 err = True
