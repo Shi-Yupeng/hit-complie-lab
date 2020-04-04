@@ -109,7 +109,7 @@ class DFA(object):
         for i in range(len(string)):
             c = string[i]
             if u'\u4e00'<= c <= u'\u9fa5' or c == "，" or c == '；' or c == '。' or c == '、':
-                c = "a"
+                c = "中"
             if s.is_final:
                 acpt = i
                 s_pre = s
@@ -251,8 +251,19 @@ class LexicalAnalyzer(object):
 
             if acept_string == "": #如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
                 err = True
+                print("===========",left)
                 error_str += left[0]
                 left = left[1:]
+
+            if left != "":
+                while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
+                    if left[0] == "\n":
+                        left = left[1:]
+                        rownumber += 1
+                    else:
+                        left = left[1:]
+                    if left == "":
+                        break
 
             if left == "" and err == True: #条过字符一直到最终也没遇到可以接受的合法字符
                 token_list.append(tkn(None, error_str,rownumber))
@@ -294,7 +305,7 @@ class Main(QMainWindow):
         try:
             if fname[0]:
                 self.Testfile = fname[0]
-                print(self.Testfile)
+                # print(self.Testfile)
                 with open(fname[0], 'r', encoding='utf8') as f:
                     strings = f.read()
 
@@ -304,7 +315,8 @@ class Main(QMainWindow):
                 for i in range(len(strings)):
                     self.Main_Ui.tableWidget.setItem(i, 0, QTableWidgetItem(strings[i]))
         except Exception as e:
-            print(e)
+            pass
+            # print(e)
 
     # 开始测试
     def beginTest(self):

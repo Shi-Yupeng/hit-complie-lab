@@ -1,0 +1,11 @@
+# ignore all files in the .idea/ directory
+.idea/
+# no .doc files
+*.doc
+# no .docx files
+*.docx
+# no .pdf files
+*.pdf
+# ignore all file in the __pycache__/ directory
+__pycache__/
+
