@@ -3,9 +3,13 @@
 import csv
 import re
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
-from UI.MainWindowtest import Ui_Form
-from token import Token
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QWidget
+
+import show_dfa
+from UI.MainWindowtest_ols import Ui_Form
+from UI.LexicalDefinition import Ui_LexicalDefinition
+from UI.DfaForm import Ui_DfaForm
+from token_ import Token
 
 ##DFA, NFA的相互转换
 class State():
@@ -231,6 +235,7 @@ class LexicalAnalyzer(object):
     def main(FAtable, string):
         # string = re.sub(r'[\u4e00-\u9fa5]','a',string)
         dfa = FA(FAtable).dfa()
+        dfa.printDfa()
         tkn = TokenMaker("source/token.txt")
         token_list = []
         error_str = ""
@@ -275,6 +280,19 @@ class LexicalAnalyzer(object):
             string = left
         return token_list
 
+class LexDef(QWidget, Ui_LexicalDefinition):
+    def __init__(self):
+        super(LexDef, self).__init__()
+        self.setupUi(self)
+
+class DfaShow(QWidget, Ui_DfaForm):
+    def __init__(self):
+        super(DfaShow, self).__init__()
+        self.setupUi(self)
+        import show_dfa
+        self.textBrowser.setText(show_dfa.get_dfa_str())
+
+
 class Main(QMainWindow):
     FAtable = "source/FA_INPUT.csv"
     Testfile = 'source/test.txt'
@@ -292,6 +310,8 @@ class Main(QMainWindow):
         self.Main_Ui.importtestfilepushButton.clicked.connect(self.opentestfile)
         self.Main_Ui.begintestpushButton.clicked.connect(self.beginTest)
         self.Main_Ui.savecontentpushButton.clicked.connect(self.savetestcontent)
+        self.Main_Ui.showlexicalrulespushButton.clicked.connect(self.event_show_lex_def)
+        self.Main_Ui.showDFAtablepushButton.clicked.connect(self.event_show_dfa)
 
     # 导入FA表
     def openfatable(self):
@@ -345,6 +365,16 @@ class Main(QMainWindow):
         for i in range(count):
             string += self.Main_Ui.tableWidget.item(i, 0).text() + '\n'
         return string[:-1]
+
+    # 查看词法规则
+    def event_show_lex_def(self):
+        self.lexdef_win = LexDef()
+        self.lexdef_win.show()
+
+    # 查看DFA转换表
+    def event_show_dfa(self):
+        self.dfa_win = DfaShow()
+        self.dfa_win.show()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
