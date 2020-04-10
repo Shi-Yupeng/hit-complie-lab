@@ -113,7 +113,7 @@ class DFA(object):
 
         for i in range(len(string)):
             c = string[i]
-            if u'\u4e00'<= c <= u'\u9fa5' or c == "，" or c == '；' or c == '。' or c == '、':
+            if u'\u4e00'<= c <= u'\u9fa5' or c == "，" or c == '；' or c == '。' or c == '、' or c == '‘' or c == '’' or c == "”" or c == "“":
                 c = "中"
             if s.is_final:
                 acpt = i
@@ -244,9 +244,10 @@ class LexicalAnalyzer(object):
         while string != "": #String存放的是每次处理之后，剩下的串
             acept_string, state, left = dfa.firstStringAccept(string)
             err = False
-
+            continueflag = False
             if left != "":
                 while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
+                    continueflag = True
                     if left[0] == "\n":
                         left = left[1:]
                         rownumber += 1
@@ -254,6 +255,9 @@ class LexicalAnalyzer(object):
                         left = left[1:]
                     if left == "":
                         break
+                if continueflag == True:
+                    string = left
+                    continue
 
             if acept_string == "": #如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
                 err = True
@@ -261,15 +265,7 @@ class LexicalAnalyzer(object):
                 error_str += left[0]
                 left = left[1:]
 
-            if left != "":
-                while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
-                    if left[0] == "\n":
-                        left = left[1:]
-                        rownumber += 1
-                    else:
-                        left = left[1:]
-                    if left == "":
-                        break
+
 
             if left == "" and err == True: #条过字符一直到最终也没遇到可以接受的合法字符
                 token_list.append(tkn(None, error_str,rownumber))
@@ -278,6 +274,15 @@ class LexicalAnalyzer(object):
                     token_list.append(tkn(None, error_str,rownumber))
                     error_str = ""
                 token_list.append(tkn(state,acept_string,rownumber))
+            if left != "":
+                while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
+                    if left[0] == "\n":
+                        left = left[1:]
+                        rownumber += 1
+                    else:
+                        left = left[1:]
+                    if left == "":
+                        break
             string = left
         return token_list
 

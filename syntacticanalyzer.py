@@ -5,7 +5,9 @@ from lexicalanalyzer import LexicalAnalyzer
 
 
 class Term(object):
-
+    """
+    LR(1)产生式条目类，包括产生式左部，以及展望符
+    """
     def __init__(self, left, right, lookahead):
         self.left = left
         self.right = right
@@ -40,18 +42,18 @@ class Term(object):
         s += ","
         s += self.lookahead
         return s
-    def IsWaitingReduce(self):
+    def IsWaitingReduce(self):#判断是否是待约状态
         if self.right[0] == ".":
             return True
         else:
             return False
-    def NextToDot(self):
+    def NextToDot(self): #返回beta串的第一个字符
         if self.right.index(".") < len(self.right) - 1:
             return self.right[self.right.index(".") + 1]
         else:
             return None
 
-    def Beta(self):
+    def Beta(self): #beta串
         if self.right.index(".") < len(self.right) - 3:
             return self.right[self.right.index(".") + 2:]
         else:
@@ -59,6 +61,9 @@ class Term(object):
 
 
 class CFGTerm(object):
+    """
+    CFG条目，包含产生式的左部和右部
+    """
     def __init__(self, left, right):
         self.__left = left
         self.__right = right
@@ -71,18 +76,18 @@ class CFGTerm(object):
 
 class LRCFG(object):
 
-    def __init__(self, cfg_file):
+    def __init__(self, cfg_file): #通过文件加载文法
         self.terms = []
         self.cfgTerms = []
         dot = "."
         with open(cfg_file, "r") as f:
             lines = f.readlines()
             for line in lines:
-                left = re.findall(r"\((.*?)\)", line.split("==>")[0])
-                right = re.findall(r"\((.*?)\)", line.split("==>")[1])
+                left = re.findall(r"\((.*?)\)", line.split("==>")[0]) #CFG条目左部，字符列表
+                right = re.findall(r"\((.*?)\)", line.split("==>")[1]) #CFG条目右部，字符列表
                 self.cfgTerms.append(CFGTerm(left, right))
 
-    def FirstForSingle(self, ALPHA):
+    def FirstForSingle(self, ALPHA): #单个字符的first集
         """
         求解单个字符的first集
         :param ALPHA:
@@ -109,7 +114,7 @@ class LRCFG(object):
                             firstSet = firstSet.union(self.FirstForSingle(right[cnt]))
         return firstSet
 
-    def First(self,string_lst):
+    def First(self,string_lst): #一个串的first集
         """
         返回串的FIRST集
         :param string_lst:
@@ -126,7 +131,7 @@ class LRCFG(object):
                 SET = SET.union(self.FirstForSingle(string_lst[cnt]))
 
         return SET
-    def Closure(self, term_set):
+    def Closure(self, term_set): #项目集闭包
         SET = term_set.copy()
         TEMSET = SET.copy()
         add = True
@@ -154,7 +159,17 @@ class LRCFG(object):
                 add = True
         return SET
 
+    def Goto(self, setI):
+        #TODO 石宇鹏
+        return None
 
+    def LRtable(self):
+        #todo 欧龙燊
+        return None
+
+    def ErrorHandle(self):
+        # todo 王程
+        pass
 
 
 
@@ -165,11 +180,12 @@ class SyntacticAnalyzer(object):
         self.token_list = []
         for token in lst:
             if token.illegal == False:
-                self.token_list.append(token)
+                self.token_list.append(token) #从词法分析其中获取token list
 
 
 if __name__ == "__main__":
     cfg = LRCFG("cfg_file.txt")
+    #cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
 
     for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
         print(t)
