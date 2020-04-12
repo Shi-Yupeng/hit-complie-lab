@@ -27,9 +27,9 @@ class Term(object):
     def __hash__(self):
         hs = hash(self.lookahead)
         for st in self.left:
-            hs += hash(st)
+            hs += (hash(st) + hash(st))
         for st in self.right:
-            hs += hash(st)
+            hs += (hash(st) + hash(st) + hash(st))
 
         return hs
 
@@ -54,8 +54,9 @@ class Term(object):
             return None
 
     def Beta(self): #beta串
-        if self.right.index(".") < len(self.right) - 3:
-            return self.right[self.right.index(".") + 2:]
+
+        if self.right.index(".") < len(self.right) - 2:
+            return self.right[self.right.index(".") + 2:].copy()
         else:
             return []
 
@@ -77,15 +78,21 @@ class CFGTerm(object):
 class LRCFG(object):
 
     def __init__(self, cfg_file): #通过文件加载文法
-        self.terms = []
+        self.terms = [] #所有LR(1)条目
         self.cfgTerms = []
         dot = "."
+        self.Symbels = []
         with open(cfg_file, "r") as f:
             lines = f.readlines()
             for line in lines:
                 left = re.findall(r"\((.*?)\)", line.split("==>")[0]) #CFG条目左部，字符列表
                 right = re.findall(r"\((.*?)\)", line.split("==>")[1]) #CFG条目右部，字符列表
+                for l in left:
+                    self.Symbels.append(l)
+                for r in right:
+                    self.Symbels.append(r)
                 self.cfgTerms.append(CFGTerm(left, right))
+        self.Items()
 
     def FirstForSingle(self, ALPHA): #单个字符的first集
         """
@@ -137,7 +144,6 @@ class LRCFG(object):
         add = True
         while add:
             add = False
-
             for term in TEMSET:
                 B = term.NextToDot()
                 beta = term.Beta()
@@ -150,8 +156,10 @@ class LRCFG(object):
                                 for syb in self.First(s):
                                     right_set = cfgTerm.right()
                                     right_set.insert(0,".")
-                                    if not Term(B, right_set,syb) in SET:
-                                        SET.add(Term(B, right_set,syb))
+                                    newterm = Term([B], right_set,syb)
+                                    if not newterm in SET:
+                                        SET.add(newterm)
+                                        self.terms.append(newterm)
 
 
             if len(TEMSET) != len(SET):
@@ -159,9 +167,50 @@ class LRCFG(object):
                 add = True
         return SET
 
-    def Goto(self, setI):
-        #TODO 石宇鹏
-        return None
+    def Goto(self, setI, X):
+        """
+        输入 项目集闭包，文法符号X
+        输出 后继项目集闭包
+        """
+        setJ = set({})
+        for item in setI:
+            if item.NextToDot() == X:
+                newleft = item.left
+                right = item.right.copy()
+                right = right[:right.index(".")]
+                right.append(X)
+                right.append(".")
+                right.extend(item.Beta())
+                newlookahead = item.lookahead
+                new_item = Term(newleft, right, newlookahead)
+                self.terms.append(new_item)
+                setJ.add(new_item)
+        return self.Closure(setJ)
+
+    def Items(self):
+        """
+        构造项集族
+        """
+        self.cluster = []  # 项集族
+        s = set({})
+        initTerm = Term(["SA"],[".","S"],"dollar")
+        s.add(initTerm)
+        initSet = self.Closure(s)
+        self.cluster.append(initSet)
+        add = True
+        temcluster = self.cluster.copy()
+        while add:
+            add = False
+            for I in temcluster:
+                for X in self.Symbels:
+                    goto = self.Goto(I,X)
+                    if goto and not (goto in self.cluster):
+                        self.cluster.append(goto)
+            if len(temcluster) != len(self.cluster.copy()):
+                temcluster = self.cluster.copy()
+                add = True
+
+
 
     def LRtable(self):
         #todo 欧龙燊
@@ -183,9 +232,24 @@ class SyntacticAnalyzer(object):
                 self.token_list.append(token) #从词法分析其中获取token list
 
 
+
+
 if __name__ == "__main__":
-    cfg = LRCFG("cfg_file.txt")
+
+    cfg = LRCFG("source/cfg_file.txt")
     #cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
 
-    for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
-        print(t)
+    # for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
+    #     print(t)
+    # print('------------------------------')
+    # c = cfg.Closure({Term(["SA"],[".","S"],"dollar")})
+    # for i in cfg.Goto(c,"mul"):
+    #     print(i)
+
+
+    cnt = 0
+    for c in cfg.cluster:
+        print(cnt, '-----------------------------------')
+        cnt += 1
+        for t in c:
+            print(t)
