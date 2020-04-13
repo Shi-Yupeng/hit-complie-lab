@@ -140,7 +140,6 @@ class LRCFG(object):
         # 构造LR分析表
         self.LRtable()
         self.PrintLRtable()
-        pass
 
     def FirstForSingle(self, ALPHA):  # 单个字符的first集
         """
