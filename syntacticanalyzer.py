@@ -3,17 +3,19 @@ import re
 from lexicalanalyzer import LexicalAnalyzer
 
 
-
 class Term(object):
     """
     LR(1)产生式条目类，包括产生式左部，以及展望符
     """
+
     def __init__(self, left, right, lookahead):
         self.left = left
         self.right = right
         self.lookahead = lookahead
 
     def __eq__(self, other):
+        if other == None:
+            return False
         for i in range(len(self.left)):
             if self.left[i] != other.left[i]:
                 return False
@@ -33,7 +35,6 @@ class Term(object):
 
         return hs
 
-
     def __str__(self):
         s = ""
         s = s + self.left[0] + " ==> "
@@ -42,18 +43,20 @@ class Term(object):
         s += ","
         s += self.lookahead
         return s
-    def IsWaitingReduce(self):#判断是否是待约状态
+
+    def IsWaitingReduce(self):  # 判断是否是待约状态
         if self.right[0] == ".":
             return True
         else:
             return False
-    def NextToDot(self): #返回beta串的第一个字符
+
+    def NextToDot(self):  # 返回beta串的第一个字符
         if self.right.index(".") < len(self.right) - 1:
             return self.right[self.right.index(".") + 1]
         else:
             return None
 
-    def Beta(self): #beta串
+    def Beta(self):  # beta串
 
         if self.right.index(".") < len(self.right) - 2:
             return self.right[self.right.index(".") + 2:].copy()
@@ -65,6 +68,7 @@ class CFGTerm(object):
     """
     CFG条目，包含产生式的左部和右部
     """
+
     def __init__(self, left, right):
         self.__left = left
         self.__right = right
@@ -75,38 +79,82 @@ class CFGTerm(object):
     def right(self):
         return self.__right.copy()
 
-class LRCFG(object):
+    def __eq__(self, other):
+        # print(self, other)
+        if other == None:
+            return False
+        for i in range(len(self.__left)):
+            if self.__left[i] != other.__left[i]:
+                return False
+        for i in range(len(self.__right)):
+            if self.__right[i] != other.__right[i]:
+                return False
+        return True
 
-    def __init__(self, cfg_file): #通过文件加载文法
-        self.terms = [] #所有LR(1)条目
-        self.cfgTerms = []
+    def __str__(self):
+        s = ""
+        s = s + self.__left[0] + " ==> "
+        for r in self.__right:
+            s += (" " + r)
+        return s
+
+
+
+class LRCFG(object):
+    # 使用LR(1)分析法进行语法分析
+
+    def __init__(self, cfg_file):  # 通过文件加载文法
+        self.cfgTerms = [] # 文法产生式，元素格式为CFGTerm
+        self.Symbels = []  # 所有产生式中终结符和非终结符
+        self.terminals = set() # 文法用到的非终结符，包含dollar符号
+        self.nonterminals = set() # 文法用到的终结符
+        self.terms = []  # 所有LR(1)条目，格式：Term
+        self.cluster = None # 项集族
+        self.table = None # LR分析表 格式：table{'action':{(i, a):sj}, 'goto':{(i, B): j} }
+
         dot = "."
-        self.Symbels = []
+
+        # 收集终结符和非终结符
         with open(cfg_file, "r") as f:
             lines = f.readlines()
             for line in lines:
-                left = re.findall(r"\((.*?)\)", line.split("==>")[0]) #CFG条目左部，字符列表
-                right = re.findall(r"\((.*?)\)", line.split("==>")[1]) #CFG条目右部，字符列表
+                left = re.findall(r"\((.*?)\)", line.split("==>")[0])  # CFG条目左部，字符列表
+                right = re.findall(r"\((.*?)\)", line.split("==>")[1])  # CFG条目右部，字符列表
                 for l in left:
                     self.Symbels.append(l)
+                    self.nonterminals.add(l)
                 for r in right:
                     self.Symbels.append(r)
+                    if r.islower():
+                        self.terminals.add(r)
+                    elif r.isupper():
+                        self.nonterminals.add(r)
+                    else:
+                        raise Exception('大写字母和小写字母混用，无法判别符号类型')
                 self.cfgTerms.append(CFGTerm(left, right))
+        self.terminals.add('dollar')
+
+        # 构造LR项集族
         self.Items()
 
-    def FirstForSingle(self, ALPHA): #单个字符的first集
+        # 构造LR分析表
+        self.LRtable()
+        self.PrintLRtable()
+        pass
+
+    def FirstForSingle(self, ALPHA):  # 单个字符的first集
         """
         求解单个字符的first集
         :param ALPHA:
         :return:
         """
         firstSet = set({})
-        if ALPHA.islower():#小写的为终结符
+        if ALPHA.islower():  # 小写的为终结符
             firstSet.add(ALPHA)
             return firstSet
-        elif ALPHA.isupper():#大写的为非终结符
+        elif ALPHA.isupper():  # 大写的为非终结符
             for cfgterm in self.cfgTerms:
-                if cfgterm.left()[0] == ALPHA and cfgterm.left()[0] != cfgterm.right()[0]: #跳过左递归
+                if cfgterm.left()[0] == ALPHA and cfgterm.left()[0] != cfgterm.right()[0]:  # 跳过左递归
                     right = cfgterm.right()
                     if right[0] == "0":
                         firstSet.add("0")
@@ -121,7 +169,7 @@ class LRCFG(object):
                             firstSet = firstSet.union(self.FirstForSingle(right[cnt]))
         return firstSet
 
-    def First(self,string_lst): #一个串的first集
+    def First(self, string_lst):  # 一个串的first集
         """
         返回串的FIRST集
         :param string_lst:
@@ -138,7 +186,8 @@ class LRCFG(object):
                 SET = SET.union(self.FirstForSingle(string_lst[cnt]))
 
         return SET
-    def Closure(self, term_set): #项目集闭包
+
+    def Closure(self, term_set):  # 项目集闭包
         SET = term_set.copy()
         TEMSET = SET.copy()
         add = True
@@ -155,12 +204,11 @@ class LRCFG(object):
                                 s = beta
                                 for syb in self.First(s):
                                     right_set = cfgTerm.right()
-                                    right_set.insert(0,".")
-                                    newterm = Term([B], right_set,syb)
+                                    right_set.insert(0, ".")
+                                    newterm = Term([B], right_set, syb)
                                     if not newterm in SET:
                                         SET.add(newterm)
                                         self.terms.append(newterm)
-
 
             if len(TEMSET) != len(SET):
                 TEMSET = SET.copy()
@@ -169,8 +217,8 @@ class LRCFG(object):
 
     def Goto(self, setI, X):
         """
-        输入 项目集闭包，文法符号X
-        输出 后继项目集闭包
+        输入 项目集闭包setI，文法符号X
+        输出 I的后继项目集闭包
         """
         setJ = set({})
         for item in setI:
@@ -193,7 +241,7 @@ class LRCFG(object):
         """
         self.cluster = []  # 项集族
         s = set({})
-        initTerm = Term(["SA"],[".","S"],"dollar")
+        initTerm = Term(["SA"], [".", "S"], "dollar")
         s.add(initTerm)
         initSet = self.Closure(s)
         self.cluster.append(initSet)
@@ -203,23 +251,118 @@ class LRCFG(object):
             add = False
             for I in temcluster:
                 for X in self.Symbels:
-                    goto = self.Goto(I,X)
+                    goto = self.Goto(I, X)
                     if goto and not (goto in self.cluster):
                         self.cluster.append(goto)
             if len(temcluster) != len(self.cluster.copy()):
                 temcluster = self.cluster.copy()
                 add = True
 
-
-
     def LRtable(self):
-        #todo 欧龙燊
-        return None
+        '''
+        Author: 欧龙燊
+        使用规范LR(1)项集族，构造LR分析表
+        约定：使用SA表示开始符号
+        '''
+        table = {'action':{}, 'goto':{}}
+
+        for term_set in self.cluster: # 对于每个项集族，构建对应状态
+            # 获得项集族index
+            index_i = self.cluster.index(term_set)
+            for term in term_set: # 对于项集族中每个项
+                term_len = len(term.right)
+                dot_index = term.right.index('.')
+                # print(dot_index)
+
+                # 计算Goto下一个符号的项集族
+                if dot_index != term_len - 1:
+                    goto = self.Goto(term_set, term.right[dot_index+1])
+                else:
+                    goto = set()
+                # 找到对应的index，如果没有就是-1
+                if len(goto) != 0:
+                    index_j = self.cluster.index(goto)
+                else:
+                    index_j = -1
+
+                # print(index_i, term, 'goto index', index_j)
+
+                # 如果点点后面是合法终结符
+                if (dot_index != term_len - 1 and term.right[dot_index+1].islower()
+                        and index_j != -1):
+                    a = term.right[dot_index+1]
+                    table['action'][(index_i, a)] = 's' + str(index_j)
+                # 如果点点后面是合法非终结符
+                elif (dot_index != term_len - 1 and term.right[dot_index+1].isupper()
+                        and index_j != -1):
+                    B = term.right[dot_index+1]
+                    table['goto'][(index_i, B)] = str(index_j)
+                # 如果是规约项
+                elif (dot_index == term_len - 1 and term.left != ['SA']):
+                    right = term.right[:]
+                    right.remove('.')
+                    cfg_term = CFGTerm(term.left, right)
+                    # print(cfg_term)
+                    cfg_index = self.cfgTerms.index(cfg_term)
+                    a = term.lookahead
+                    table['action'][(index_i, a)] = 'r' + str(cfg_index)
+                # 如果是接收项
+                elif (dot_index == term_len - 1 and term.left == ['SA'] and term.lookahead == 'dollar'):
+                    table['action'][(index_i, 'dollar')] = 'acc'
+
+        # 用错误项填充剩余内容
+        for i in range(len(self.cluster)):
+            for symbol in self.terminals:
+                if (i, symbol) not in table['action']:
+                    table['action'][(i, symbol)] = 'err'
+
+        self.table = table
+
+    def PrintLRtable(self, type='print'):
+        '''
+        打印LR分析表内容或者获取对应字符串
+        :type 可以取值'print'或'get'
+        '''
+        if self.table == None:
+            print('LR分析表还未生成')
+            return
+
+        terminals = list(self.terminals)
+        nonterminals = list(self.nonterminals)
+        nonterminals.remove('SA')
+        terminals.sort()
+        nonterminals.sort()
+
+        # 表头
+        res = ' '
+        for i in terminals:
+            if i == 'dollar':
+                res += '\t$'
+            else:
+                res += '\t' + i
+        for i in nonterminals:
+            res += '\t' + i
+        res += '\n'
+
+        for line in range(len(self.cluster)):
+            res += str(line)
+            for i in terminals:
+                res += '\t' + self.table['action'][(line, i)]
+            for i in nonterminals:
+                if (line, i) in self.table['goto']:
+                    res += '\t' + self.table['goto'][(line, i)]
+                else:
+                    res += '\t '
+            res += '\n'
+
+        if type == 'print':
+            print(res)
+        elif type == 'get':
+            return res
 
     def ErrorHandle(self):
         # todo 王程
         pass
-
 
 
 class SyntacticAnalyzer(object):
@@ -229,23 +372,20 @@ class SyntacticAnalyzer(object):
         self.token_list = []
         for token in lst:
             if token.illegal == False:
-                self.token_list.append(token) #从词法分析其中获取token list
-
-
+                self.token_list.append(token)  # 从词法分析其中获取token list
 
 
 if __name__ == "__main__":
 
     cfg = LRCFG("source/cfg_file.txt")
-    #cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
+    # cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
 
-    # for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
-    #     print(t)
-    # print('------------------------------')
-    # c = cfg.Closure({Term(["SA"],[".","S"],"dollar")})
-    # for i in cfg.Goto(c,"mul"):
-    #     print(i)
-
+    for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
+        print(t)
+    print('------------------------------')
+    c = cfg.Closure({Term(["SA"],[".","S"],"dollar")})
+    for i in cfg.Goto(c,"mul"):
+        print(i)
 
     cnt = 0
     for c in cfg.cluster:
