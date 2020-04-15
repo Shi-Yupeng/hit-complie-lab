@@ -352,10 +352,6 @@ class LRCFG(object):
         elif type == 'get':
             return res
 
-    def ErrorHandle(self):
-        # todo 王程
-        pass
-
 # 移入规约驱动程序
 class ShiftReduce(object):
     terms = None
@@ -387,6 +383,27 @@ class ShiftReduce(object):
         # 压入
         self.symbol_stack.append(left[0])
 
+    # 错误处理(恐慌模式)
+    def ErrorHandle(self):
+        si = None
+        nonterminal_symbol = None
+        # 寻找存在goto项的状态及对应非终结符
+        flag = False
+        while True:
+            for item in self.LRtable['goto'].keys():
+                if self.state_stack[-1] in item:
+                    si = self.state_stack[-1]
+                    nonterminal_symbol = item[1]
+                    flag = True
+            if flag: # 寻找到则跳出
+                break
+            self.state_stack.pop()
+            self.symbol_stack.pop()
+        # 将A压栈
+        self.symbol_stack.append(nonterminal_symbol)
+        self.state_stack.append(int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
+        return nonterminal_symbol # 返回A，用于丢弃输入符
+
     # LR分析表 格式：table{'action':{(i, a):sj}, 'goto':{(i, B): j} }
     def main(self):
         # 规约用的式子
@@ -414,6 +431,7 @@ class ShiftReduce(object):
             next_operate = self.LRtable['action'][(self.state_stack[-1], kind)]
             # 移入
             if next_operate[0] == 's':
+                # print(token.value)
                 next_state = int(next_operate[1:])
                 self.shift_in(next_state, kind)
                 i += 1
@@ -422,11 +440,17 @@ class ShiftReduce(object):
                 reduce_number = int(next_operate[1:])
                 self.reduce(reduce_number)
                 self.state_stack.append(int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
-                reduce_formula.append([self.terms[i].left(), self.terms[i].right()])
+                reduce_formula.append([self.terms[reduce_number].left(), self.terms[reduce_number].right()])
             # 错误处理
             else:
-                print('发生错误')
-                break
+                print('发生错误, 将使用恐慌模式处理！')
+                nonterminal_symbol = self.ErrorHandle()
+
+                # 丢弃不可能跟着的输入
+                if token != 'dollar':
+                    i += 1
+                else:
+                    break
         print(reduce_formula)
 
 # 获取词法单元
