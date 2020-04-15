@@ -1,6 +1,6 @@
 SA==>S
-S==>L = R
+S==>L eq R
 S==>R
-L==>* R
+L==>mul R
 L==>id
 R==>L

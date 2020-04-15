@@ -1,7 +1,6 @@
 # from token import Token
 from lexicalanalyzer import LexicalAnalyzer
 
-
 class Term(object):
     """
     LR(1)产生式条目类，包括产生式左部，以及展望符
@@ -386,41 +385,51 @@ class ShiftReduce(object):
             self.state_stack.pop()
             self.symbol_stack.pop()
         # 压入
-        self.symbol_stack.append(left)
+        self.symbol_stack.append(left[0])
 
     # LR分析表 格式：table{'action':{(i, a):sj}, 'goto':{(i, B): j} }
     def main(self):
-        for token in self.tokenlist:
+        # 规约用的式子
+        reduce_formula = []
+        i = 0
+        while True:
+            token = self.tokenlist[i]
             # 判断是否接受
             if token == 'dollar' and self.LRtable['action'][self.state_stack[-1], 'dollar'] == 'acc':
                 print('源程序正确接受')
-            elif token == 'dollar':
-                print('无法接收')
                 break
 
-            if token.kind == 'CMT': # 跳过注释
+            if token != 'dollar' and token.kind == 'CMT': # 跳过注释
                 continue
 
-            kind = token.attribute
+            # dollar的kind就为dollar
+            if token == 'dollar':
+                kind = 'dollar'
+            else:
+                kind = token.kind
+            # print(kind)
+            # print(self.state_stack)
+            # print(self.symbol_stack)
+            # print()
             next_operate = self.LRtable['action'][(self.state_stack[-1], kind)]
             # 移入
             if next_operate[0] == 's':
                 next_state = int(next_operate[1:])
                 self.shift_in(next_state, kind)
+                i += 1
             # 规约
             elif next_operate[0] == 'r':
                 reduce_number = int(next_operate[1:])
                 self.reduce(reduce_number)
-                self.state_stack.append(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])])
+                self.state_stack.append(int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
+                reduce_formula.append([self.terms[i].left(), self.terms[i].right()])
             # 错误处理
             else:
                 print('发生错误')
+                break
+        print(reduce_formula)
 
-            print(self.state_stack)
-            print(self.symbol_stack)
-            print(token.attribute)
-            print()
-
+# 获取词法单元
 class Lexical_unit(object):
     def __init__(self):
         with open('source/simple_test.txt', 'r', encoding='utf8') as f:

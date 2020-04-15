@@ -1,9 +1,9 @@
-t_2:TAG:id
+t_2:id:id
 t_4:AOP:False
 t_5:AOP:False
-t_6:AOP:*
+t_6:mul:*
 t_7:AOP:False
-t_8:AOP:=
+t_8:eq:=
 t_10:ROP:False
 t_11:ROP:False
 t_12:ROP:False
