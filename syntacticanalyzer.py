@@ -322,7 +322,7 @@ class LRCFG(object):
 
         terminals = list(self.terminals)
         nonterminals = list(self.nonterminals)
-        # nonterminals.remove('SA')
+        nonterminals.remove('SA')
         terminals.sort()
         nonterminals.sort()
 
@@ -476,6 +476,8 @@ if __name__ == "__main__":
     cfg = LRCFG("source/cfg_file.txt")
     SR = ShiftReduce(cfg.cfgTerms, cfg.table, token_list)
     SR.main()
+
+
     # cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
 
     # for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
