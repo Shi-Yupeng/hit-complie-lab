@@ -4,28 +4,28 @@ class CFGTerm(object):
     """
     CFG条目，包含产生式的左部和右部
     """
+
     def __init__(self, left, right):
-        self.left = left
-        self.right = right
+        self.__left = left
+        self.__right = right
+
+    def left(self):
+        return self.__left.copy()
+
+    def right(self):
+        return self.__right.copy()
 
     def __eq__(self, other):
         # print(self, other)
         if other == None:
             return False
-        for i in range(len(self.left)):
-            if self.left[i] != other.__left[i]:
+        for i in range(len(self.__left)):
+            if self.__left[i] != other.__left[i]:
                 return False
-        for i in range(len(self.right)):
-            if self.right[i] != other.__right[i]:
+        for i in range(len(self.__right)):
+            if self.__right[i] != other.__right[i]:
                 return False
         return True
-
-    def __str__(self):
-        s = ""
-        s = s + self.left[0] + " ==> "
-        for r in self.right:
-            s += (" " + r)
-        return s
 
 class ParseTree:
     def __init__(self, val, child_list, line_num):
@@ -60,9 +60,9 @@ class ParseTree:
             else:
                 cfg_index = int(i)
                 cfg = cfg_list[cfg_index]
-                child_num = len(cfg.right)
+                child_num = len(cfg.right())
                 child = []
-                for i in cfg.right:
+                for i in cfg.right():
                     if i == 'epsilon':
                         t1 = ParseTree('epsilon', [], -1)
                         child.insert(0, t1)
@@ -73,7 +73,7 @@ class ParseTree:
                     if i.line_num > line_num:
                         line_num = i.line_num
                         break
-                t = ParseTree(cfg.left[0], child, line_num)
+                t = ParseTree(cfg.left()[0], child, line_num)
                 ans.append(t)
 
         assert len(ans) == 1
