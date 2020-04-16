@@ -1,5 +1,11 @@
 # from token import Token
+import sys
 from lexicalanalyzer import LexicalAnalyzer
+from ParseTree import ParseTree
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QWidget
+from UI.MainWindow import Ui_Form
+from UI.CFGDefinition import CFG_Ui_Form
+from UI.LRtable import Ui_LRForm
 
 class Term(object):
     """
@@ -133,7 +139,6 @@ class LRCFG(object):
         # 构造LR分析表
         self.LRtable()
         self.PrintLRtable()
-        pass
 
     def FirstForSingle(self, ALPHA):  # 单个字符的first集
         """
@@ -322,7 +327,7 @@ class LRCFG(object):
 
         terminals = list(self.terminals)
         nonterminals = list(self.nonterminals)
-        nonterminals.remove('SA')
+        # nonterminals.remove('SA')
         terminals.sort()
         nonterminals.sort()
 
@@ -352,6 +357,21 @@ class LRCFG(object):
             print(res)
         elif type == 'get':
             return res
+
+# 获取词法单元
+class Lexical_unit(object):
+    def __init__(self, Testfile):
+        with open(Testfile, 'r', encoding='utf8') as f:
+            string = f.read()
+        lst = LexicalAnalyzer.main('source/FA_INPUT.csv', string)
+        self.token_list = []
+        for token in lst:
+            if token.illegal == False:
+                self.token_list.append(token)  # 从词法分析其中获取token list
+        self.token_list.append('dollar') # 末尾添加$符
+
+    def getTokenList(self):
+        return self.token_list
 
 # 移入规约驱动程序
 class ShiftReduce(object):
@@ -425,23 +445,24 @@ class ShiftReduce(object):
                 kind = 'dollar'
             else:
                 kind = token.kind
-            # print(kind)
-            # print(self.state_stack)
-            # print(self.symbol_stack)
-            # print()
+            print(kind)
+            print(self.state_stack)
+            print(self.symbol_stack)
+            print()
             next_operate = self.LRtable['action'][(self.state_stack[-1], kind)]
             # 移入
             if next_operate[0] == 's':
                 # print(token.value)
                 next_state = int(next_operate[1:])
                 self.shift_in(next_state, kind)
+                reduce_formula.append(kind + ' (0)')
                 i += 1
             # 规约
             elif next_operate[0] == 'r':
                 reduce_number = int(next_operate[1:])
                 self.reduce(reduce_number)
                 self.state_stack.append(int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
-                reduce_formula.append([self.terms[reduce_number].left(), self.terms[reduce_number].right()])
+                reduce_formula.append(str(reduce_number))
             # 错误处理
             else:
                 print('发生错误, 将使用恐慌模式处理！')
@@ -453,31 +474,119 @@ class ShiftReduce(object):
                 else:
                     break
         print(reduce_formula)
+        return reduce_formula
 
-# 获取词法单元
-class Lexical_unit(object):
-    def __init__(self):
-        with open('source/simple_test.txt', 'r', encoding='utf8') as f:
-            string = f.read()
-        lst = LexicalAnalyzer.main('source/FA_INPUT.csv', string)
-        self.token_list = []
-        for token in lst:
-            if token.illegal == False:
-                self.token_list.append(token)  # 从词法分析其中获取token list
-        self.token_list.append('dollar') # 末尾添加$符
+class Main(QMainWindow):
+    CFGfile = "source/cfg_file.txt"
+    Testfile = 'source/test.txt'
+    token_list = Lexical_unit(Testfile).getTokenList()
+    cfg = LRCFG(CFGfile)
+    LRtable = cfg.table
+    cfgterms = cfg.cfgTerms
 
-    def getTokenList(self):
-        return self.token_list
+    # 初始化
+    def __init__(self, parent = None):
+        super(Main, self).__init__(parent)
+        self.Main_Ui = Ui_Form()
+        self.Main_Ui.setupUi(self)
+        self.bindbutton()
+
+    # 绑定按钮
+    def bindbutton(self):
+        self.Main_Ui.import_cfg_pushButton.clicked.connect(self.openCFG)
+        self.Main_Ui.import_test_pushButton.clicked.connect(self.opentestfile)
+        self.Main_Ui.show_cfg_pushButton.clicked.connect(self.event_show_CFG)
+        self.Main_Ui.show_LRtable_pushButton.clicked.connect(self.event_show_LRtable)
+        self.Main_Ui.save_pushButton.clicked.connect(self.savetestcontent)
+        self.Main_Ui.begin_test_pushButton.clicked.connect(self.beginTest)
+
+    # 导入CFG
+    def openCFG(self):
+        fname = QFileDialog.getOpenFileName(self, caption='Open file', directory='.')
+        if fname[0]:
+            self.CFGfile = fname[0]
+        self.cfg = LRCFG(self.CFGfile)
+        self.LRtable = self.cfg.table
+        self.cfgterms = self.cfg.cfgTerms
+
+    # 导入测试文件
+    def opentestfile(self):
+        fname = QFileDialog.getOpenFileName(self, caption='Open file', directory='.')
+        try:
+            if fname[0]:
+                self.Testfile = fname[0]
+                self.token_list = Lexical_unit(self.Testfile).getTokenList()
+                # print(self.Testfile)
+                with open(fname[0], 'r', encoding='utf8') as f:
+                    strings = f.read()
+
+                strings = strings.split('\n')
+                self.Main_Ui.tableWidget_2.setRowCount(len(strings))
+                self.Main_Ui.tableWidget_2.clear()
+                for i in range(len(strings)):
+                    self.Main_Ui.tableWidget_2.setItem(i, 0, QTableWidgetItem(strings[i]))
+        except Exception as e:
+            pass
+            # print(e)
+
+    # 开始测试
+    def beginTest(self):
+        input = ShiftReduce(self.cfgterms, self.LRtable, self.token_list).main()
+        root = ParseTree.create_tree(input, self.cfgterms)
+        pre_str = root.pre_order_str(root, 0)
+        self.Main_Ui.result_textBrowser.setText(pre_str)
+
+    # 保存内容
+    def savetestcontent(self):
+        with open(self.Testfile, 'w', encoding='utf8') as f:
+            f.write(self.gettablecontent())
+        self.Main_Ui.result_textBrowser.clear()
+        self.Main_Ui.wrong_textBrowser.clear()
+        self.Main_Ui.result_textBrowser.insertPlainText('保存成功！')
+
+    # 获取表格内容
+    def gettablecontent(self):
+        count = self.Main_Ui.tableWidget_2.rowCount()
+        string = ""
+        for i in range(count):
+            string += self.Main_Ui.tableWidget_2.item(i, 0).text() + '\n'
+        return string[:-1]
+
+    # 查看CFG
+    def event_show_CFG(self):
+        cfg_string = ''
+        for cfgterm in self.cfgterms:
+            cfg_string += ' '.join(cfgterm.left())
+            cfg_string += '-->'
+            cfg_string += ' '.join(cfgterm.right())
+            cfg_string += '\n'
+        self.cfgform = QMainWindow()
+        cfgui = CFG_Ui_Form()
+        cfgui.setupUi(self.cfgform)
+        cfgui.CFG_textBrowser.setText(cfg_string)
+        self.cfgform.show()
+
+    # 查看LR表
+    def event_show_LRtable(self):
+        lrtable = self.cfg.PrintLRtable()
+        self.lrform = QMainWindow()
+        lrui = Ui_LRForm()
+        lrui.setupUi(self.lrform)
+        lrui.textBrowser.setText(lrtable)
+        self.lrform.show()
 
 if __name__ == "__main__":
-    token_list = Lexical_unit().getTokenList()
+    app = QApplication(sys.argv)
+    m = Main()
+    m.show()
+    sys.exit(app.exec_())
+    # token_list = Lexical_unit().getTokenList()
     # for token in token_list:
     #     print(token.string, token.kind)
-    cfg = LRCFG("source/cfg_file.txt")
-    SR = ShiftReduce(cfg.cfgTerms, cfg.table, token_list)
-    SR.main()
-
-
+    # cfg = LRCFG("source/cfg_file.txt")
+    # SR = ShiftReduce(cfg.cfgTerms, cfg.table, token_list)
+    # SR.main()
+    # print(cfg.cfgTerms[0].left())
     # cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
 
     # for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):

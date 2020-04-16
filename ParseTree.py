@@ -105,12 +105,9 @@ class ParseTree:
             self.__pre_order(node, depth)
             return self.str
 
-
 l = []
 terminals = set()
 nonterminals = set()
-
-
 
 def main():
     # 输入是读入的终结符和使用的各个产生式的标号
@@ -137,20 +134,17 @@ def main():
                 else:
                     raise Exception('大写字母和小写字母混用，无法判别符号类型')
             cfg_list.append(CFGTerm(left, right))
-    pass
-
-    input = [
-        'proc (1)', 'id:inc (1)', 'sc (1)', 'int (2)', '6',
-        '7', '5', 'id:i (2)', 'sc (2)', '3',
-        'id:i (3)', 'eq (3)', 'id:i (3)', '9', 'add (3)',
-        'digit:1 (3)', '10', '8', 'sc (3)', '4',
-        '2', '1'
-    ]
-
-    root = ParseTree.create_tree(input, cfg_list)
-    pre_str = root.pre_order_str(root, 0)
-    print(pre_str)
-
+    # input = [
+    #     'proc (1)', 'id:inc (1)', 'sc (1)', 'int (2)', '6',
+    #     '7', '5', 'id:i (2)', 'sc (2)', '3',
+    #     'id:i (3)', 'eq (3)', 'id:i (3)', '9', 'add (3)',
+    #     'digit:1 (3)', '10', '8', 'sc (3)', '4',
+    #     '2', '1'
+    # ]
+    #
+    # root = ParseTree.create_tree(input, cfg_list)
+    # pre_str = root.pre_order_str(root, 0)
+    # print(pre_str)
 
 if __name__ == '__main__':
     main()

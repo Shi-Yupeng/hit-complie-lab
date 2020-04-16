@@ -329,7 +329,6 @@ class DfaShow(QWidget, Ui_DfaForm):
         show_dfa.main()
         self.textBrowser.setText(show_dfa.get_dfa_str())
 
-
 class Main(QMainWindow):
     FAtable = "source/FA_INPUT.csv"
     Testfile = 'source/test.txt'
