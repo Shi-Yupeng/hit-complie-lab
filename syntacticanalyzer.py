@@ -1,7 +1,5 @@
 # from token import Token
-import re
 from lexicalanalyzer import LexicalAnalyzer
-
 
 class Term(object):
     """
@@ -63,7 +61,6 @@ class Term(object):
         else:
             return []
 
-
 class CFGTerm(object):
     """
     CFG条目，包含产生式的左部和右部
@@ -98,8 +95,6 @@ class CFGTerm(object):
             s += (" " + r)
         return s
 
-
-
 class LRCFG(object):
     # 使用LR(1)分析法进行语法分析
 
@@ -118,19 +113,17 @@ class LRCFG(object):
         with open(cfg_file, "r") as f:
             lines = f.readlines()
             for line in lines:
-                left = re.findall(r"\((.*?)\)", line.split("==>")[0])  # CFG条目左部，字符列表
-                right = re.findall(r"\((.*?)\)", line.split("==>")[1])  # CFG条目右部，字符列表
+                left = [line.split("==>")[0]]  # CFG条目左部，字符列表
+                right = line.split("==>")[1].split()  # CFG条目右部，字符列表
                 for l in left:
                     self.Symbels.append(l)
                     self.nonterminals.add(l)
                 for r in right:
                     self.Symbels.append(r)
-                    if r.islower():
-                        self.terminals.add(r)
-                    elif r.isupper():
+                    if r.isupper(): # 大写视为非终极符
                         self.nonterminals.add(r)
-                    else:
-                        raise Exception('大写字母和小写字母混用，无法判别符号类型')
+                    else: # 非大写视为终结符
+                        self.terminals.add(r)
                 self.cfgTerms.append(CFGTerm(left, right))
         self.terminals.add('dollar')
 
@@ -329,7 +322,7 @@ class LRCFG(object):
 
         terminals = list(self.terminals)
         nonterminals = list(self.nonterminals)
-        nonterminals.remove('SA')
+        # nonterminals.remove('SA')
         terminals.sort()
         nonterminals.sort()
 
@@ -360,36 +353,141 @@ class LRCFG(object):
         elif type == 'get':
             return res
 
+# 移入规约驱动程序
+class ShiftReduce(object):
+    terms = None
+    LRtable = None
+    tokenlist = None
+    symbol_stack = [] # 符号栈
+    state_stack = [0] # 状态栈
+
+    def __init__(self, terms, LRtable, token_list):
+        self.terms = terms
+        self.LRtable = LRtable
+        self.tokenlist = token_list
+        self.symbol_stack.append(terms[0].left()[0])
+
+    # 移入操作
+    def shift_in(self,next_state, insymbol):
+        self.state_stack.append(next_state)
+        self.symbol_stack.append(insymbol)
+
+    # 规约操作
+    def reduce(self, reduce_number):
+        term = self.terms[reduce_number]
+        left = term.left()
+        right = term.right()
+        # 弹出产生式右部符号
+        for i in range(len(right)):
+            self.state_stack.pop()
+            self.symbol_stack.pop()
+        # 压入
+        self.symbol_stack.append(left[0])
+
+    # 错误处理(恐慌模式)
     def ErrorHandle(self):
-        # todo 王程
-        pass
+        si = None
+        nonterminal_symbol = None
+        # 寻找存在goto项的状态及对应非终结符
+        flag = False
+        while True:
+            for item in self.LRtable['goto'].keys():
+                if self.state_stack[-1] in item:
+                    si = self.state_stack[-1]
+                    nonterminal_symbol = item[1]
+                    flag = True
+            if flag: # 寻找到则跳出
+                break
+            self.state_stack.pop()
+            self.symbol_stack.pop()
+        # 将A压栈
+        self.symbol_stack.append(nonterminal_symbol)
+        self.state_stack.append(int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
+        return nonterminal_symbol # 返回A，用于丢弃输入符
 
+    # LR分析表 格式：table{'action':{(i, a):sj}, 'goto':{(i, B): j} }
+    def main(self):
+        # 规约用的式子
+        reduce_formula = []
+        i = 0
+        while True:
+            token = self.tokenlist[i]
+            # 判断是否接受
+            if token == 'dollar' and self.LRtable['action'][self.state_stack[-1], 'dollar'] == 'acc':
+                print('源程序正确接受')
+                break
 
-class SyntacticAnalyzer(object):
+            if token != 'dollar' and token.kind == 'CMT': # 跳过注释
+                continue
 
+            # dollar的kind就为dollar
+            if token == 'dollar':
+                kind = 'dollar'
+            else:
+                kind = token.kind
+            # print(kind)
+            # print(self.state_stack)
+            # print(self.symbol_stack)
+            # print()
+            next_operate = self.LRtable['action'][(self.state_stack[-1], kind)]
+            # 移入
+            if next_operate[0] == 's':
+                # print(token.value)
+                next_state = int(next_operate[1:])
+                self.shift_in(next_state, kind)
+                i += 1
+            # 规约
+            elif next_operate[0] == 'r':
+                reduce_number = int(next_operate[1:])
+                self.reduce(reduce_number)
+                self.state_stack.append(int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
+                reduce_formula.append([self.terms[reduce_number].left(), self.terms[reduce_number].right()])
+            # 错误处理
+            else:
+                print('发生错误, 将使用恐慌模式处理！')
+                nonterminal_symbol = self.ErrorHandle()
+
+                # 丢弃不可能跟着的输入
+                if token != 'dollar':
+                    i += 1
+                else:
+                    break
+        print(reduce_formula)
+
+# 获取词法单元
+class Lexical_unit(object):
     def __init__(self):
-        lst = LexicalAnalyzer.main()
+        with open('source/simple_test.txt', 'r', encoding='utf8') as f:
+            string = f.read()
+        lst = LexicalAnalyzer.main('source/FA_INPUT.csv', string)
         self.token_list = []
         for token in lst:
             if token.illegal == False:
                 self.token_list.append(token)  # 从词法分析其中获取token list
+        self.token_list.append('dollar') # 末尾添加$符
 
+    def getTokenList(self):
+        return self.token_list
 
 if __name__ == "__main__":
-
+    token_list = Lexical_unit().getTokenList()
+    # for token in token_list:
+    #     print(token.string, token.kind)
     cfg = LRCFG("source/cfg_file.txt")
+    SR = ShiftReduce(cfg.cfgTerms, cfg.table, token_list)
+    SR.main()
     # cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
 
-    for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
-        print(t)
-    print('------------------------------')
-    c = cfg.Closure({Term(["SA"],[".","S"],"dollar")})
-    for i in cfg.Goto(c,"mul"):
-        print(i)
-
-    cnt = 0
-    for c in cfg.cluster:
-        print(cnt, '-----------------------------------')
-        cnt += 1
-        for t in c:
-            print(t)
+    # for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
+    #     print(t)
+    # print('------------------------------')
+    # c = cfg.Closure({Term(["SA"],[".","S"],"dollar")})
+    # for i in cfg.Goto(c,"mul"):
+    #     print(i)
+    #
+    # cnt = 0
+    # for c in cfg.cluster:
+    #     print(cnt, '-----------------------------------')
+    #     cnt += 1
+    #     for t in c:
+    #         print(t)
