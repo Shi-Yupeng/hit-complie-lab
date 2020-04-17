@@ -11,6 +11,8 @@ class Term(object):
     def __eq__(self, other):
         if other == None:
             return False
+        if len(self.left) != len(other.left) or len(self.right) != len(other.right):
+            return False
         for i in range(len(self.left)):
             if self.left[i] != other.left[i]:
                 return False

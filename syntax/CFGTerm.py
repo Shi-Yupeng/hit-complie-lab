@@ -19,6 +19,8 @@ class CFGTerm(object):
         # print(self, other)
         if other == None:
             return False
+        if len(self.__left) != len(other.__left) or len(self.__right) != len(other.__right):
+            return False
         for i in range(len(self.__left)):
             if self.__left[i] != other.__left[i]:
                 return False

@@ -1,0 +1,4 @@
+call main()
+call delete_all(list)
+call delete(list, index)
+call append(list, 3 * 2)

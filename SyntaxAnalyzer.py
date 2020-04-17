@@ -2,16 +2,16 @@ import sys
 from syntax.ParseTree import ParseTree
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from UI.MainWindow import Ui_Form
-from UI.CFGDefinition import CFG_Ui_Form
-from UI.LRtable import Ui_LRForm
+from UI.CFGDefinition import Ui_Form as CFG_Ui_Form
+from UI.LRtable import Ui_Form as Ui_LRForm
 from syntax.LexicalUnit import Lexical_unit
 from syntax.LRCFG import LRCFG
 from syntax.ShiftReduce import ShiftReduce
 
 
 class Main(QMainWindow):
-    CFGfile = "source/syntax/cfg_file.txt"
-    Testfile = 'source/syntax/test_int.txt'
+    CFGfile = "source/syntax/cfg_call.txt"
+    Testfile = 'source/syntax/test_call.txt'
     token_list = Lexical_unit(Testfile).getTokenList()
     cfg = LRCFG(CFGfile)
     LRtable = cfg.table
@@ -100,7 +100,7 @@ class Main(QMainWindow):
         cfg_string = ''
         for cfgterm in self.cfgterms:
             cfg_string += ' '.join(cfgterm.left())
-            cfg_string += '-->'
+            cfg_string += '\t-->\t'
             cfg_string += ' '.join(cfgterm.right())
             cfg_string += '\n'
         self.cfgform = QMainWindow()
@@ -124,24 +124,3 @@ if __name__ == "__main__":
     m = Main()
     m.show()
     sys.exit(app.exec_())
-    # token_list = Lexical_unit().getTokenList()
-    # for token in token_list:
-    #     print(token.string, token.kind)
-    # cfg = LRCFG("source/cfg_file.txt")
-    # SR = ShiftReduce(cfg.cfgTerms, cfg.table, token_list)
-    # SR.main()
-    # print(cfg.cfgTerms[0].left())
-
-    # for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
-    #     print(t)
-    # print('------------------------------')
-    # c = cfg.Closure({Term(["SA"],[".","S"],"dollar")})
-    # for i in cfg.Goto(c,"mul"):
-    #     print(i)
-    #
-    # cnt = 0
-    # for c in cfg.cluster:
-    #     print(cnt, '-----------------------------------')
-    #     cnt += 1
-    #     for t in c:
-    #         print(t)

@@ -3,6 +3,7 @@ P==>D
 D==>proc id ; D S
 D==>T id ;
 T==>X
+
 X==>int C
 C==>null
 S==>id = E ;

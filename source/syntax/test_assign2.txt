@@ -1,0 +1,4 @@
+rewq = -7;
+haha = (3 * 5);
+rua = miao;
+rewq = arr[3];

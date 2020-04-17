@@ -10,6 +10,7 @@ from UI.LexicalDefinition import Ui_LexicalDefinition
 from UI.DfaForm import Ui_DfaForm
 from lexical.Token_ import Token
 
+
 ##DFA, NFA的相互转换
 class State():
     def __init__(self, contant):
@@ -17,10 +18,10 @@ class State():
 
         :param contant: 列表，nfa状态集合的子集
         """
-        self.tag = False #子集构造法中需要加上的标记
-        self.contant = contant #因为这是nfa合并之后的状态，所以dfa中的每个状态时nfa状态集合的子集，contant的内容是一个列表，存放的是nfa的状态集合的子集
-        self.is_final = False #是否是终态，默认false
-        for ctt in contant: #如果合并后的dfa状态中，含有nfa的终态，那么这个dfa状态就是终态
+        self.tag = False  # 子集构造法中需要加上的标记
+        self.contant = contant  # 因为这是nfa合并之后的状态，所以dfa中的每个状态时nfa状态集合的子集，contant的内容是一个列表，存放的是nfa的状态集合的子集
+        self.is_final = False  # 是否是终态，默认false
+        for ctt in contant:  # 如果合并后的dfa状态中，含有nfa的终态，那么这个dfa状态就是终态
             if "t_" in ctt:
                 self.is_final = True
                 break
@@ -40,27 +41,27 @@ class State():
             discribe += ("," + s)
         return "(" + discribe[1:] + ")"
 
+
 class DFA(object):
 
     def __init__(self, Dstart, Dtran):
-        self.start_state = State(Dstart) #存放的是合并状态之后dfa的起始状态
-        self.trans_table = {} #将dfa转换条目存储成字典形式，方便下边状态转换的查询
-        self.states = [self.start_state] #存放dfa的所有状态
-        self.conditions = [] #转换条件，也就是字符
-        for trans_term in Dtran: #tran_term的数据形式（（s,a），t）,s代表状态，a代表遇到的字符，也就是转移条件，t代表转换之后的状态
+        self.start_state = State(Dstart)  # 存放的是合并状态之后dfa的起始状态
+        self.trans_table = {}  # 将dfa转换条目存储成字典形式，方便下边状态转换的查询
+        self.states = [self.start_state]  # 存放dfa的所有状态
+        self.conditions = []  # 转换条件，也就是字符
+        for trans_term in Dtran:  # tran_term的数据形式（（s,a），t）,s代表状态，a代表遇到的字符，也就是转移条件，t代表转换之后的状态
             condition = trans_term[0][1]
-            if not condition in self.conditions: #将转换条件存储
+            if not condition in self.conditions:  # 将转换条件存储
                 self.conditions.append(condition)
             current_state = State(trans_term[0][0])
             next_state = State(trans_term[1])
             if not current_state in self.states:
-                self.states.append(current_state) #将状态存储
+                self.states.append(current_state)  # 将状态存储
             if not next_state in self.states:
                 self.states.append(next_state)
             self.trans_table[(current_state, condition)] = next_state
 
-
-    def printDfa(self,set_form = False):
+    def printDfa(self, set_form=False):
         """
         以两种形式展示dfa
         :param set_form: 如果form是true，那么展示表，否则展示条目
@@ -69,20 +70,20 @@ class DFA(object):
         if set_form:
             lst = self.trans_table.items()
             for itm in lst:
-                print(str(itm[0][0]) +" if " + itm[0][1] + " => " + str(itm[1]))
+                print(str(itm[0][0]) + " if " + itm[0][1] + " => " + str(itm[1]))
             return
         head = "condition\states  "
         for state in self.states:
             head += "{:21}".format(str(state))
         print(head)
         for c in self.conditions:
-            print("{:17}".format(c),end = " ")
+            print("{:17}".format(c), end=" ")
             for i in range(len(self.states)):
                 if (self.states[i], c) in self.trans_table.keys():
                     s = self.trans_table[(self.states[i], c)]
                 else:
                     s = ""
-                print("{:20}".format(str(s)),end=" ")
+                print("{:20}".format(str(s)), end=" ")
             print()
 
     def move(self, s, c):
@@ -106,46 +107,47 @@ class DFA(object):
 
         s = self.start_state
 
-        acpt = 0 #记录上一次识别成功接受的位置
-        s_pre = None #记录上一次识别成功接收时的终态
+        acpt = 0  # 记录上一次识别成功接受的位置
+        s_pre = None  # 记录上一次识别成功接收时的终态
 
         for i in range(len(string)):
             c = string[i]
-            if u'\u4e00'<= c <= u'\u9fa5' or c == "，" or c == '；' or c == '。' or c == '、':
+            if u'\u4e00' <= c <= u'\u9fa5' or c == "，" or c == '；' or c == '。' or c == '、':
                 c = "中"
             if s.is_final:
                 acpt = i
                 s_pre = s
             s = self.move(s, c)
             if s == None:
-                return string[:acpt],s_pre,string[acpt:]
+                return string[:acpt], s_pre, string[acpt:]
             if i == len(string) - 1:
                 if s.is_final:
                     return string, s, ""
                 else:
                     return string[:acpt], s_pre, string[acpt:]
 
+
 class FA(object):
     def __init__(self, FA_file):
-        self.trans_table = {} #状态转换表
-        self.start_state = [] #存放起始状态
+        self.trans_table = {}  # 状态转换表
+        self.start_state = []  # 存放起始状态
         # self.terminal_state = {}
         self.states = []
         self.symbles = []
         self.new_start = None
-        with open(FA_file, "r",encoding='utf-8') as f:
+        with open(FA_file, "r", encoding='utf-8') as f:
             file = csv.reader(f)
             f_csv = []
             for line in file:
                 f_csv.append(line)
             headers = f_csv[0]
-            inputs = headers[1:] #csv文件第一行，从序号1开始存放的都是输入字符
-            self.symbles = inputs #初始化输入字符
-            f_csv = f_csv[1:] #此时f_csv存放的是状态，以及状态后边遇到字符后的转移状态
+            inputs = headers[1:]  # csv文件第一行，从序号1开始存放的都是输入字符
+            self.symbles = inputs  # 初始化输入字符
+            f_csv = f_csv[1:]  # 此时f_csv存放的是状态，以及状态后边遇到字符后的转移状态
             for row in f_csv:
                 state = row[0]
-                self.states.append(state) #状态集合中存放状态
-                if "s_" in state: #判断是否是起始状态，如果是，将s_后边的串存放在起始状态和状态列表中
+                self.states.append(state)  # 状态集合中存放状态
+                if "s_" in state:  # 判断是否是起始状态，如果是，将s_后边的串存放在起始状态和状态列表中
                     state = state[2:]
                     self.start_state.append(state)
                     # self.start_state=[state]
@@ -153,22 +155,23 @@ class FA(object):
                 #     state = state[2:]
                 #     self.terminal_state.get(state)
                 for i in range(len(row) - 1):
-                    term = (inputs[i], state) #转移条件：状态 + 字符
+                    term = (inputs[i], state)  # 转移条件：状态 + 字符
                     next_states = row[i + 1]
-                    states = re.match(r"{(.*?)}", next_states)\
-                        .group(1).replace(" ", "").split(",") #转移的状态
+                    states = re.match(r"{(.*?)}", next_states) \
+                        .group(1).replace(" ", "").split(",")  # 转移的状态
                     if len(states[0]) != 0:
-                        self.trans_table[term] = states #将此条状态转移条目加到自动机转换表中
-        if len(self.start_state) > 1:#如果起始状态中有多个，说明有多个自动机，此时要设置一个新的、共同的起点，和所有原来自动机的起始状态用空边相连接
+                        self.trans_table[term] = states  # 将此条状态转移条目加到自动机转换表中
+        if len(self.start_state) > 1:  # 如果起始状态中有多个，说明有多个自动机，此时要设置一个新的、共同的起点，和所有原来自动机的起始状态用空边相连接
             self.new_start = "new_start"
             term = ("null", self.new_start)
             self.trans_table[term] = self.start_state
         else:
             self.new_start = self.start_state[0]
-    def dfa(self): #子集构造法 得到DFA
+
+    def dfa(self):  # 子集构造法 得到DFA
         init_state = State(self.epsilon_closure([self.new_start]))
         Dset = [init_state]
-        Dtran = [] #dfa转换状态条目
+        Dtran = []  # dfa转换状态条目
         for state in Dset:
 
             if state.tag == False:
@@ -179,10 +182,10 @@ class FA(object):
                     U = State(self.epsilon_closure(self.move(state.contant, smp)))
                     if not U in Dset:
                         Dset.append(U)
-                    k = (state.contant, smp) #得到的dfa转移状态和转移条件
-                    v = U.contant #得到的dfa的转换状态
-                    Dtran.append((k,v))
-        Dstart = self.epsilon_closure([self.new_start]) #起始状态的epsilon集合作为dfa起始状态
+                    k = (state.contant, smp)  # 得到的dfa转移状态和转移条件
+                    v = U.contant  # 得到的dfa的转换状态
+                    Dtran.append((k, v))
+        Dstart = self.epsilon_closure([self.new_start])  # 起始状态的epsilon集合作为dfa起始状态
         dfa = DFA(Dstart, Dtran)
         return dfa
 
@@ -192,6 +195,7 @@ class FA(object):
             if (a, t) in self.trans_table.keys():
                 lst.extend(self.trans_table[(a, t)])
         return lst
+
     def epsilon_closure(self, T):
 
         out = list(T)
@@ -208,25 +212,28 @@ class FA(object):
                         stack.append(u)
         return out
 
+
 class TokenMaker(object):
     """
     根据token定义文件，将终态和对应种别码读入
     """
-    def __init__(self,Tokenfile):
+
+    def __init__(self, Tokenfile):
         self.token_list = []
-        with open(Tokenfile, "r",encoding="utf-8") as f:
+        with open(Tokenfile, "r", encoding="utf-8") as f:
             lines = f.readlines()
             for line in lines:
                 self.token_list.append(line.rstrip())
 
-    def __call__(self,state, string,rownumber): #根据终态、被接受的字符串new出一个Token
+    def __call__(self, state, string, rownumber):  # 根据终态、被接受的字符串new出一个Token
         if state != None:
             for tk in self.token_list:
                 if tk.split(":")[0] in state.contant:
-                    token = Token(string, tk,rownumber)
+                    token = Token(string, tk, rownumber)
                     return token
         else:
-            return Token(string, None,rownumber)
+            return Token(string, None, rownumber)
+
 
 class LexicalAnalyzer(object):
 
@@ -269,10 +276,12 @@ class LexicalAnalyzer(object):
                 string = left
         return token_list
 
+
 class LexDef(QWidget, Ui_LexicalDefinition):
     def __init__(self):
         super(LexDef, self).__init__()
         self.setupUi(self)
+
 
 class DfaShow(QWidget, Ui_DfaForm):
     def __init__(self):
@@ -287,7 +296,7 @@ class Main(QMainWindow):
     Testfile = 'source/test.txt'
 
     # 初始化
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(Main, self).__init__(parent)
         self.Main_Ui = Ui_Form()
         self.Main_Ui.setupUi(self)
@@ -329,12 +338,12 @@ class Main(QMainWindow):
 
     # 开始测试
     def beginTest(self):
-        strs= ""
+        strs = ""
         self.token_lst = LexicalAnalyzer.main(self.FAtable, self.gettablecontent())
         self.Main_Ui.textBrowser.clear()
         self.Main_Ui.textBrowser_2.clear()
         for t in self.token_lst:
-            strs += t.error() + ";" #TODO 添加输出信息
+            strs += t.error() + ";"  # TODO 添加输出信息
             self.Main_Ui.textBrowser.insertPlainText(str(t) + '\n')
             if t.error() != '':
                 self.Main_Ui.textBrowser_2.insertPlainText(str(t.error()) + '\n')
@@ -364,6 +373,7 @@ class Main(QMainWindow):
     def event_show_dfa(self):
         self.dfa_win = DfaShow()
         self.dfa_win.show()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

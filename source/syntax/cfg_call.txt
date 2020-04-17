@@ -1,0 +1,18 @@
+SA==>P
+P==>D
+P==>S
+S==>S S
+
+S==>call id ( ELIST )
+ELIST==>ELIST , E
+ELIST==>E
+ELIST==>null
+
+E==>E + E
+E==>E * E
+E==>E - E
+E==>- E
+E==>( E )
+E==>id
+E==>digit
+E==>L

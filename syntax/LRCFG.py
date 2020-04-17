@@ -20,6 +20,9 @@ class LRCFG(object):
         with open(cfg_file, "r") as f:
             lines = f.readlines()
             for line in lines:
+                line = line.strip()
+                if line == '':
+                    continue
                 left = [line.split("==>")[0]]  # CFG条目左部，字符列表
                 right = line.split("==>")[1].split()  # CFG条目右部，字符列表
                 for l in left:
@@ -45,7 +48,7 @@ class LRCFG(object):
 
         # 构造LR分析表
         self.LRtable()
-        self.PrintLRtable()
+        # self.PrintLRtable()
 
     def FirstForSingle(self, ALPHA):  # 单个字符的first集
         """
@@ -179,7 +182,6 @@ class LRCFG(object):
             for term in term_set:  # 对于项集族中每个项
                 term_len = len(term.right)
                 dot_index = term.right.index('.')
-                # print(dot_index)
 
                 # 计算Goto下一个符号的项集族
                 if dot_index != term_len - 1:
@@ -191,8 +193,6 @@ class LRCFG(object):
                     index_j = self.cluster.index(goto)
                 else:
                     index_j = -1
-
-                # print(index_i, term, 'goto index', index_j)
 
                 # 如果点点后面是合法终结符
                 if (dot_index != term_len - 1 and not term.right[dot_index + 1].isupper()
@@ -209,7 +209,6 @@ class LRCFG(object):
                     right = term.right[:]
                     right.remove('.')
                     cfg_term = CFGTerm(term.left, right)
-                    # print(cfg_term)
                     cfg_index = self.cfgTerms.index(cfg_term)
                     a = term.lookahead
                     if a == 'null':
@@ -241,7 +240,7 @@ class LRCFG(object):
 
         terminals = list(self.terminals)
         nonterminals = list(self.nonterminals)
-        # nonterminals.remove('SA')
+        nonterminals.remove('SA')
         terminals.sort()
         nonterminals.sort()
 
