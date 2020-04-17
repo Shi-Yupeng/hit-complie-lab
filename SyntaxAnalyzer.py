@@ -1,24 +1,24 @@
-# from token import Token
 import sys
-from syntactical.ParseTree import ParseTree
+from syntax.ParseTree import ParseTree
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from UI.MainWindow import Ui_Form
 from UI.CFGDefinition import CFG_Ui_Form
 from UI.LRtable import Ui_LRForm
-from LexicalUnit import Lexical_unit
-from syntactical.LRCFG import LRCFG
-from syntactical.ShiftReduce import ShiftReduce
+from syntax.LexicalUnit import Lexical_unit
+from syntax.LRCFG import LRCFG
+from syntax.ShiftReduce import ShiftReduce
+
 
 class Main(QMainWindow):
-    CFGfile = "source/syntactical/cfg_file.txt"
-    Testfile = 'source/syntactical/test.txt'
+    CFGfile = "source/syntax/cfg_file.txt"
+    Testfile = 'source/syntax/test.txt'
     token_list = Lexical_unit(Testfile).getTokenList()
     cfg = LRCFG(CFGfile)
     LRtable = cfg.table
     cfgterms = cfg.cfgTerms
 
     # 初始化
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(Main, self).__init__(parent)
         self.Main_Ui = Ui_Form()
         self.Main_Ui.setupUi(self)
@@ -66,7 +66,8 @@ class Main(QMainWindow):
     def beginTest(self):
         self.Main_Ui.result_textBrowser.clear()
         self.Main_Ui.wrong_textBrowser.clear()
-        input, wrong_reduce = ShiftReduce(self.cfg.cluster, self.cfgterms, self.LRtable, self.token_list).main()
+        input, wrong_reduce = ShiftReduce(self.cfg.cluster, self.cfgterms, self.LRtable,
+                                          self.token_list).main()
         try:
             root = ParseTree.create_tree(input, self.cfgterms)
             pre_str = root.pre_order_str(root, 0)
@@ -113,6 +114,7 @@ class Main(QMainWindow):
         lrui.setupUi(self.lrform)
         lrui.textBrowser.setText(lrtable)
         self.lrform.show()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

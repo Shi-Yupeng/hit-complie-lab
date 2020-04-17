@@ -1,4 +1,4 @@
-from lexicalanalyzer import LexicalAnalyzer
+from LexicalAnalyzer import LexicalAnalyzer
 
 # 获取词法单元
 class Lexical_unit(object):

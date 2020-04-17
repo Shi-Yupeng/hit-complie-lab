@@ -9,7 +9,7 @@ from lexical import ShowDfa
 from UI.MainWindow import Ui_Form
 from UI.LexicalDefinition import Ui_LexicalDefinition
 from UI.DfaForm import Ui_DfaForm
-from token_ import Token
+from lexical.Token_ import Token
 
 
 ##DFA, NFA的相互转换

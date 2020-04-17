@@ -82,32 +82,7 @@ def main():
     # 输入是读入的终结符和使用的各个产生式的标号
     # 输出是语法分析树
     import re
-    class CFGTerm(object):
-        """
-        CFG条目，包含产生式的左部和右部
-        """
-
-        def __init__(self, left, right):
-            self.__left = left
-            self.__right = right
-
-        def left(self):
-            return self.__left.copy()
-
-        def right(self):
-            return self.__right.copy()
-
-        def __eq__(self, other):
-            # print(self, other)
-            if other == None:
-                return False
-            for i in range(len(self.__left)):
-                if self.__left[i] != other.__left[i]:
-                    return False
-            for i in range(len(self.__right)):
-                if self.__right[i] != other.__right[i]:
-                    return False
-            return True
+    from syntax.CFGTerm import CFGTerm
 
     cfg_list = []
     terminals = set()

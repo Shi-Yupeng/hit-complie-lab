@@ -1,16 +1,18 @@
-from syntactical.CFGTerm import CFGTerm
-from syntactical.Term import Term
+from syntax.CFGTerm import CFGTerm
+from syntax.Term import Term
+
+
 class LRCFG(object):
     # 使用LR(1)分析法进行语法分析
 
     def __init__(self, cfg_file):  # 通过文件加载文法
-        self.cfgTerms = [] # 文法产生式，元素格式为CFGTerm
+        self.cfgTerms = []  # 文法产生式，元素格式为CFGTerm
         self.Symbels = []  # 所有产生式中终结符和非终结符
-        self.terminals = set() # 文法用到的非终结符，包含dollar符号
-        self.nonterminals = set() # 文法用到的终结符
+        self.terminals = set()  # 文法用到的非终结符，包含dollar符号
+        self.nonterminals = set()  # 文法用到的终结符
         self.terms = []  # 所有LR(1)条目，格式：Term
-        self.cluster = None # 项集族
-        self.table = None # LR分析表 格式：table{'action':{(i, a):sj}, 'goto':{(i, B): j} }
+        self.cluster = None  # 项集族
+        self.table = None  # LR分析表 格式：table{'action':{(i, a):sj}, 'goto':{(i, B): j} }
 
         dot = "."
 
@@ -25,9 +27,9 @@ class LRCFG(object):
                     self.nonterminals.add(l)
                 for r in right:
                     self.Symbels.append(r)
-                    if r.isupper(): # 大写视为非终极符
+                    if r.isupper():  # 大写视为非终极符
                         self.nonterminals.add(r)
-                    else: # 非大写视为终结符
+                    else:  # 非大写视为终结符
                         self.terminals.add(r)
                 self.cfgTerms.append(CFGTerm(left, right))
         self.terminals.add('dollar')
@@ -161,19 +163,19 @@ class LRCFG(object):
         使用规范LR(1)项集族，构造LR分析表
         约定：使用SA表示开始符号
         '''
-        table = {'action':{}, 'goto':{}}
+        table = {'action': {}, 'goto': {}}
 
-        for term_set in self.cluster: # 对于每个项集族，构建对应状态
+        for term_set in self.cluster:  # 对于每个项集族，构建对应状态
             # 获得项集族index
             index_i = self.cluster.index(term_set)
-            for term in term_set: # 对于项集族中每个项
+            for term in term_set:  # 对于项集族中每个项
                 term_len = len(term.right)
                 dot_index = term.right.index('.')
                 # print(dot_index)
 
                 # 计算Goto下一个符号的项集族
                 if dot_index != term_len - 1:
-                    goto = self.Goto(term_set, term.right[dot_index+1])
+                    goto = self.Goto(term_set, term.right[dot_index + 1])
                 else:
                     goto = set()
                 # 找到对应的index，如果没有就是-1
@@ -185,14 +187,14 @@ class LRCFG(object):
                 # print(index_i, term, 'goto index', index_j)
 
                 # 如果点点后面是合法终结符
-                if (dot_index != term_len - 1 and term.right[dot_index+1].islower()
+                if (dot_index != term_len - 1 and term.right[dot_index + 1].islower()
                         and index_j != -1):
-                    a = term.right[dot_index+1]
+                    a = term.right[dot_index + 1]
                     table['action'][(index_i, a)] = 's' + str(index_j)
                 # 如果点点后面是合法非终结符
-                elif (dot_index != term_len - 1 and term.right[dot_index+1].isupper()
-                        and index_j != -1):
-                    B = term.right[dot_index+1]
+                elif (dot_index != term_len - 1 and term.right[dot_index + 1].isupper()
+                      and index_j != -1):
+                    B = term.right[dot_index + 1]
                     table['goto'][(index_i, B)] = str(index_j)
                 # 如果是规约项
                 elif (dot_index == term_len - 1 and term.left != ['SA']):
@@ -204,7 +206,8 @@ class LRCFG(object):
                     a = term.lookahead
                     table['action'][(index_i, a)] = 'r' + str(cfg_index)
                 # 如果是接收项
-                elif (dot_index == term_len - 1 and term.left == ['SA'] and term.lookahead == 'dollar'):
+                elif (dot_index == term_len - 1 and term.left == [
+                    'SA'] and term.lookahead == 'dollar'):
                     table['action'][(index_i, 'dollar')] = 'acc'
 
         # 用错误项填充剩余内容

@@ -14,7 +14,7 @@ class ShiftReduce(object):
         self.symbol_stack.append(terms[0].left()[0])
 
     # 移入操作
-    def shift_in(self,next_state, insymbol):
+    def shift_in(self, next_state, insymbol):
         self.state_stack.append(next_state)
         self.symbol_stack.append(insymbol)
 
@@ -42,7 +42,7 @@ class ShiftReduce(object):
                     si = self.state_stack[-1]
                     nonterminal_symbol = item[1]
                     flag = True
-            if flag: # 寻找到则跳出
+            if flag:  # 寻找到则跳出
                 break
 
             # # 如果弹出的是终结符，需要在reduce_formula对应弹出
@@ -57,8 +57,9 @@ class ShiftReduce(object):
 
         # 将A压栈(相当于用A规约)
         self.symbol_stack.append(nonterminal_symbol)
-        self.state_stack.append(int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
-        return nonterminal_symbol, reduce_formula # 返回A，用于丢弃输入符
+        self.state_stack.append(
+            int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
+        return nonterminal_symbol, reduce_formula  # 返回A，用于丢弃输入符
 
     # LR分析表 格式：table{'action':{(i, a):sj}, 'goto':{(i, B): j} }
     def main(self):
@@ -71,11 +72,12 @@ class ShiftReduce(object):
             token = self.tokenlist[i]
 
             # 判断是否接受
-            if token == 'dollar' and self.LRtable['action'][self.state_stack[-1], 'dollar'] == 'acc':
+            if token == 'dollar' and self.LRtable['action'][
+                self.state_stack[-1], 'dollar'] == 'acc':
                 print('源程序正确接受')
                 break
 
-            if token != 'dollar' and token.kind == 'CMT': # 跳过注释
+            if token != 'dollar' and token.kind == 'CMT':  # 跳过注释
                 i += 1
                 continue
 
@@ -101,18 +103,20 @@ class ShiftReduce(object):
                 # print(token.value)
                 next_state = int(next_operate[1:])
                 self.shift_in(next_state, attribute)
-                reduce_formula.append(attribute + ':' + token.value + ' (' + str(token.rownumber) + ')')
+                reduce_formula.append(
+                    attribute + ':' + token.value + ' (' + str(token.rownumber) + ')')
                 i += 1
             # 规约
             elif next_operate[0] == 'r':
                 reduce_number = int(next_operate[1:])
                 self.reduce(reduce_number)
-                self.state_stack.append(int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
+                self.state_stack.append(
+                    int(self.LRtable['goto'][(self.state_stack[-1], self.symbol_stack[-1])]))
                 reduce_formula.append(str(reduce_number))
             # 错误处理
             else:
                 print('发生错误, 将使用恐慌模式处理！')
-                nonterminal_symbol, reduce_formula = self.ErrorHandle(reduce_formula) # 找到出错的规约式
+                nonterminal_symbol, reduce_formula = self.ErrorHandle(reduce_formula)  # 找到出错的规约式
                 print(reduce_formula)
 
                 # 找到A推导的产生式, 并用它规约
@@ -122,7 +126,9 @@ class ShiftReduce(object):
                             reduce_formula.append(right + ' (' + str(token.rownumber) + ')')
                         reduce_formula.append(str(i))
                         # 记录错误，格式：Error at Line [token.rownumber]：错误规约：规约式
-                        wrong_reduce.append('Error at Line [' + str(token.rownumber) + ']：错误规约：' + self.terms[i].left()[0] + '-->' + ' '.join(self.terms[i].right()))
+                        wrong_reduce.append('Error at Line [' + str(token.rownumber) + ']：错误规约：' +
+                                            self.terms[i].left()[0] + '-->' + ' '.join(
+                            self.terms[i].right()))
                         break
 
                 # 寻找合法跟在A后面的符号
