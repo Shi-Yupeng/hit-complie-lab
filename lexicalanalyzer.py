@@ -5,7 +5,7 @@ import re
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QWidget
 
-import ShowDfa
+from lexical import ShowDfa
 from UI.MainWindow import Ui_Form
 from UI.LexicalDefinition import Ui_LexicalDefinition
 from UI.DfaForm import Ui_DfaForm
@@ -274,9 +274,6 @@ class LexicalAnalyzer(object):
                         error_str = ""
                     token_list.append(tkn(state, acept_string, rownumber + 1))
                 string = left
-
-
-
         # while string != "": #String存放的是每次处理之后，剩下的串
         #     acept_string, state, left = dfa.firstStringAccept(string)
         #     err = False

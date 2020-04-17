@@ -8,17 +8,3 @@ token.txt 格式为“X:属性:Y”，其中X是终态，属性是终态对应�
 
 ## 语法分析：
 cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
-
-for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
-	print(t)
-print('------------------------------')
-c = cfg.Closure({Term(["SA"],[".","S"],"dollar")})
-for i in cfg.Goto(c,"mul"):
-	print(i)
-
-cnt = 0
-for c in cfg.cluster:
-	print(cnt, '-----------------------------------')
-	cnt += 1
-	for t in c:
-		print(t)
