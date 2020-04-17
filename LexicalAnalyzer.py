@@ -237,46 +237,36 @@ class LexicalAnalyzer(object):
         dfa.printDfa()
         tkn = TokenMaker("source/token.txt")
         token_list = []
-        error_str = ""
-        rownumber = 1 #记录行号
-        while string != "": #String存放的是每次处理之后，剩下的串
-            acept_string, state, left = dfa.firstStringAccept(string)
-            err = False
+        string_lines = string.split("\n")
+        for rownumber in range(len(string_lines)):
+            line = string_lines[rownumber]
+            string = line
+            string = string.lstrip()
 
-            if left != "":
-                while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
-                    if left[0] == "\n":
-                        left = left[1:]
-                        rownumber += 1
-                    else:
-                        left = left[1:]
-                    if left == "":
-                        break
+            error_str = ""
+            while string != "":
 
-            if acept_string == "": #如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
-                err = True
-                print("===========",left)
-                error_str += left[0]
-                left = left[1:]
+                acept_string, state, left = dfa.firstStringAccept(string)
+                # if left != "":
+                #     if left[0] == " " or  left[0] == "\t":  # 去掉串首空格
 
-            if left != "":
-                while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
-                    if left[0] == "\n":
-                        left = left[1:]
-                        rownumber += 1
-                    else:
-                        left = left[1:]
-                    if left == "":
-                        break
-
-            if left == "" and err == True: #条过字符一直到最终也没遇到可以接受的合法字符
-                token_list.append(tkn(None, error_str,rownumber))
-            if err == False:
-                if len(error_str) != 0:
-                    token_list.append(tkn(None, error_str,rownumber))
-                    error_str = ""
-                token_list.append(tkn(state,acept_string,rownumber))
-            string = left
+                left = left.lstrip()
+                # string = left
+                # continue
+                err = False
+                if acept_string == "":  # 如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
+                    err = True
+                    # print("===========",left)
+                    error_str += left[0]
+                    left = left[1:]
+                if left == "" and err == True:  # 条过字符一直到最终也没遇到可以接受的合法字符
+                    token_list.append(tkn(None, error_str, rownumber + 1))
+                if err == False:
+                    if len(error_str) != 0:
+                        token_list.append(tkn(None, error_str, rownumber + 1))
+                        error_str = ""
+                    token_list.append(tkn(state, acept_string, rownumber + 1))
+                string = left
         return token_list
 
 class LexDef(QWidget, Ui_LexicalDefinition):
