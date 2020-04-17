@@ -11,7 +11,7 @@ from syntax.ShiftReduce import ShiftReduce
 
 class Main(QMainWindow):
     CFGfile = "source/syntax/cfg_file.txt"
-    Testfile = 'source/syntax/test.txt'
+    Testfile = 'source/syntax/test_int.txt'
     token_list = Lexical_unit(Testfile).getTokenList()
     cfg = LRCFG(CFGfile)
     LRtable = cfg.table
@@ -64,17 +64,20 @@ class Main(QMainWindow):
 
     # 开始测试
     def beginTest(self):
-        self.Main_Ui.result_textBrowser.clear()
-        self.Main_Ui.wrong_textBrowser.clear()
-        input, wrong_reduce = ShiftReduce(self.cfg.cluster, self.cfgterms, self.LRtable,
-                                          self.token_list).main()
         try:
-            root = ParseTree.create_tree(input, self.cfgterms)
-            pre_str = root.pre_order_str(root, 0)
-            self.Main_Ui.result_textBrowser.setText(pre_str)
-        except:
-            self.Main_Ui.result_textBrowser.setText('猜测错产生式，无法正常分析，构建语法树失败！')
-        self.Main_Ui.wrong_textBrowser.setText('\n'.join(wrong_reduce))
+            self.Main_Ui.result_textBrowser.clear()
+            self.Main_Ui.wrong_textBrowser.clear()
+            input, wrong_reduce = ShiftReduce(self.cfg.cluster, self.cfgterms, self.LRtable,
+                                              self.token_list).main()
+            try:
+                root = ParseTree.create_tree(input, self.cfgterms)
+                pre_str = root.pre_order_str(root, 0)
+                self.Main_Ui.result_textBrowser.setText(pre_str)
+            except:
+                self.Main_Ui.result_textBrowser.setText('猜测错产生式，无法正常分析，构建语法树失败！')
+            self.Main_Ui.wrong_textBrowser.setText('\n'.join(wrong_reduce))
+        except Exception as e:
+            print(repr(e))
 
     # 保存内容
     def savetestcontent(self):

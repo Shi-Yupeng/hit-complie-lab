@@ -1,17 +1,19 @@
+SA==>P
 P==>D
 P==>S
 S==>S S
 D==>D D
 D==>proc id ; D S
-D==>T id
+D==>T id ;
 T==>X C
 T==>record D
-X==>integer real
+X==>integer
+X==>real
 C==>[ num ] C
 C==>null
 S==>id = E ;
 S==>L = E ;
-E==>E + E
+E==>E + E ;
 E==>E * E
 E==>- E
 E==>( E )
@@ -20,9 +22,9 @@ E==>digit
 E==>L
 L==>id [ E ]
 L==>L [ E ]
-S==>if B then S1
-S==>if B then S1 else S2
-S==>while B do S1
+S==>if B then S
+S==>if B then S else S
+S==>while B do S
 B==>B or B
 B==>B and B
 B==>not B

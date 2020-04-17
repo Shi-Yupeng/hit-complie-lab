@@ -1,3 +1,4 @@
+import time
 # 移入规约驱动程序
 class ShiftReduce(object):
     terms = None
@@ -37,6 +38,7 @@ class ShiftReduce(object):
         # 寻找存在goto项的状态及对应非终结符
         flag = False
         while True:
+            time.sleep(1)
             for item in self.LRtable['goto'].keys():
                 if self.state_stack[-1] in item:
                     si = self.state_stack[-1]
@@ -68,6 +70,8 @@ class ShiftReduce(object):
         # 错误的式子
         wrong_reduce = []
         i = 0
+        for token in self.tokenlist:
+            print(token)
         while True:
             token = self.tokenlist[i]
 

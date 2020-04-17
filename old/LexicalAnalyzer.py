@@ -5,10 +5,12 @@ import re
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QWidget
 
+from lexical import ShowDfa
 from UI.MainWindow import Ui_Form
 from UI.LexicalDefinition import Ui_LexicalDefinition
 from UI.DfaForm import Ui_DfaForm
 from lexical.Token_ import Token
+
 
 ##DFA, NFA的相互转换
 class State():
@@ -111,7 +113,9 @@ class DFA(object):
 
         for i in range(len(string)):
             c = string[i]
-            if u'\u4e00'<= c <= u'\u9fa5' or c == "，" or c == '；' or c == '。' or c == '、':
+            if u'\u4e00'<= c <= u'\u9fa5' or c == "，" or c == '；' \
+                    or c == '。' or c == '、' or c == '‘' or c == '’'\
+                    or c == '”' or c == '“':
                 c = "中"
             if s.is_final:
                 acpt = i
@@ -232,51 +236,82 @@ class LexicalAnalyzer(object):
 
     @staticmethod
     def main(FAtable, string):
+
+        string = re.sub(r'\ufeff','',string)
         # string = re.sub(r'[\u4e00-\u9fa5]','a',string)
         dfa = FA(FAtable).dfa()
-        dfa.printDfa()
+        # dfa.printDfa()
         tkn = TokenMaker("source/token.txt")
         token_list = []
-        error_str = ""
-        rownumber = 1 #记录行号
-        while string != "": #String存放的是每次处理之后，剩下的串
-            acept_string, state, left = dfa.firstStringAccept(string)
-            err = False
 
-            if left != "":
-                while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
-                    if left[0] == "\n":
-                        left = left[1:]
-                        rownumber += 1
-                    else:
-                        left = left[1:]
-                    if left == "":
-                        break
+        string_lines = string.split("\n")
+        for rownumber in range(len(string_lines)):
+            line = string_lines[rownumber]
+            string = line
 
-            if acept_string == "": #如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
-                err = True
-                print("===========",left)
-                error_str += left[0]
-                left = left[1:]
 
-            if left != "":
-                while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
-                    if left[0] == "\n":
-                        left = left[1:]
-                        rownumber += 1
-                    else:
-                        left = left[1:]
-                    if left == "":
-                        break
+            error_str = ""
+            while string != "":
 
-            if left == "" and err == True: #条过字符一直到最终也没遇到可以接受的合法字符
-                token_list.append(tkn(None, error_str,rownumber))
-            if err == False:
-                if len(error_str) != 0:
-                    token_list.append(tkn(None, error_str,rownumber))
-                    error_str = ""
-                token_list.append(tkn(state,acept_string,rownumber))
-            string = left
+                acept_string, state, left = dfa.firstStringAccept(string)
+                if left != "":
+                    if left[0] == " " or  left[0] == "\t":  # 去掉串首空格
+
+                        left = left.lstrip()
+                        string = left
+                        continue
+                err = False
+                if acept_string == "":  # 如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
+                    err = True
+                    # print("===========",left)
+                    error_str += left[0]
+                    left = left[1:]
+                if left == "" and err == True:  # 条过字符一直到最终也没遇到可以接受的合法字符
+                    token_list.append(tkn(None, error_str, rownumber + 1))
+                if err == False:
+                    if len(error_str) != 0:
+                        token_list.append(tkn(None, error_str, rownumber + 1))
+                        error_str = ""
+                    token_list.append(tkn(state, acept_string, rownumber + 1))
+                string = left
+        # while string != "": #String存放的是每次处理之后，剩下的串
+        #     acept_string, state, left = dfa.firstStringAccept(string)
+        #     err = False
+        #
+            # if left != "":
+            #     while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
+            #         if left[0] == "\n":
+            #             left = left[1:]
+            #             rownumber += 1
+            #         else:
+            #             left = left[1:]
+            #         if left == "":
+            #             break
+        #
+        #     if acept_string == "": #如果某次处理之后，剩下的串长度没变，说明此时的串没有被识别，条过并记录该字符继续处理
+        #         err = True
+        #         # print("===========",left)
+        #         error_str += left[0]
+        #         left = left[1:]
+        #
+        #     if left != "":
+        #         while left[0] == " " or left[0] == "\n" or left[0] == "\t":#去掉串首空格
+        #             if left[0] == "\n":
+        #                 left = left[1:]
+        #                 rownumber += 1
+        #             else:
+        #                 left = left[1:]
+        #             if left == "":
+        #                 break
+        #
+        #     if left == "" and err == True: #条过字符一直到最终也没遇到可以接受的合法字符
+        #         token_list.append(tkn(None, error_str,rownumber))
+        #     if err == False:
+        #         if len(error_str) != 0:
+        #             token_list.append(tkn(None, error_str,rownumber))
+        #             error_str = ""
+        #         token_list.append(tkn(state,acept_string,rownumber))
+        #     string = left
         return token_list
 
 class LexDef(QWidget, Ui_LexicalDefinition):
@@ -288,9 +323,8 @@ class DfaShow(QWidget, Ui_DfaForm):
     def __init__(self):
         super(DfaShow, self).__init__()
         self.setupUi(self)
-        import show_dfa
-        self.textBrowser.setText(show_dfa.get_dfa_str())
-
+        ShowDfa.main()
+        self.textBrowser.setText(ShowDfa.get_dfa_str())
 
 class Main(QMainWindow):
     FAtable = "source/FA_INPUT.csv"

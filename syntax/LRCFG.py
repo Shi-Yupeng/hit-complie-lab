@@ -36,6 +36,11 @@ class LRCFG(object):
 
         # 构造LR项集族
         self.Items()
+        print(self.cluster[5])
+        for cluster in self.cluster[5]:
+            print(cluster)
+        for cluster in self.Goto(self.cluster[6] , 'id'):
+            print(cluster)
 
         # 构造LR分析表
         self.LRtable()
@@ -48,7 +53,7 @@ class LRCFG(object):
         :return:
         """
         firstSet = set({})
-        if ALPHA.islower():  # 小写的为终结符
+        if not ALPHA.isupper():  # 小写的为终结符
             firstSet.add(ALPHA)
             return firstSet
         elif ALPHA.isupper():  # 大写的为非终结符
@@ -140,7 +145,7 @@ class LRCFG(object):
         """
         self.cluster = []  # 项集族
         s = set({})
-        initTerm = Term(["SA"], [".", "S"], "dollar")
+        initTerm = Term(["SA"], [".", "P"], "dollar")
         s.add(initTerm)
         initSet = self.Closure(s)
         self.cluster.append(initSet)
@@ -187,7 +192,7 @@ class LRCFG(object):
                 # print(index_i, term, 'goto index', index_j)
 
                 # 如果点点后面是合法终结符
-                if (dot_index != term_len - 1 and term.right[dot_index + 1].islower()
+                if (dot_index != term_len - 1 and not term.right[dot_index + 1].isupper()
                         and index_j != -1):
                     a = term.right[dot_index + 1]
                     table['action'][(index_i, a)] = 's' + str(index_j)
@@ -204,7 +209,11 @@ class LRCFG(object):
                     # print(cfg_term)
                     cfg_index = self.cfgTerms.index(cfg_term)
                     a = term.lookahead
-                    table['action'][(index_i, a)] = 'r' + str(cfg_index)
+                    if a == 'null':
+                        for i in self.terminals:
+                            table['action'][(index_i, i)] = 'r' + str(cfg_index)
+                    else:
+                        table['action'][(index_i, a)] = 'r' + str(cfg_index)
                 # 如果是接收项
                 elif (dot_index == term_len - 1 and term.left == [
                     'SA'] and term.lookahead == 'dollar'):

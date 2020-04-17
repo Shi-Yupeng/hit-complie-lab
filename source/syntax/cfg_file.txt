@@ -1,6 +1,11 @@
-SA==>S
-S==>L eq R
-S==>R
-L==>mul R
-L==>id
-R==>L
+SA==>P
+P==>D
+D==>proc id ; D S
+D==>T id ;
+T==>X C
+C==>null
+X==>int
+S==>id = E ;
+E==>E + E
+E==>id
+E==>digit
