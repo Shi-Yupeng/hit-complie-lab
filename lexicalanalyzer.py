@@ -5,7 +5,7 @@ import re
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QWidget
 
-import show_dfa
+import ShowDfa
 from UI.MainWindow import Ui_Form
 from UI.LexicalDefinition import Ui_LexicalDefinition
 from UI.DfaForm import Ui_DfaForm
@@ -326,8 +326,8 @@ class DfaShow(QWidget, Ui_DfaForm):
     def __init__(self):
         super(DfaShow, self).__init__()
         self.setupUi(self)
-        show_dfa.main()
-        self.textBrowser.setText(show_dfa.get_dfa_str())
+        ShowDfa.main()
+        self.textBrowser.setText(ShowDfa.get_dfa_str())
 
 class Main(QMainWindow):
     FAtable = "source/FA_INPUT.csv"

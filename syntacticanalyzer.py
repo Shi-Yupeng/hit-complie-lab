@@ -317,7 +317,7 @@ class LRCFG(object):
 
         self.table = table
 
-    def PrintLRtable(self, type='print'):
+    def PrintLRtable(self, type='get'):
         '''
         打印LR分析表内容或者获取对应字符串
         :type 可以取值'print'或'get'
@@ -520,8 +520,8 @@ class ShiftReduce(object):
 # R, dollar, ['id (0)', '4', 'eq (0)', 'id (0)', '5', '1']
 
 class Main(QMainWindow):
-    CFGfile = "source/cfg_file.txt"
-    Testfile = 'source/test.txt'
+    CFGfile = "source/syntactical/cfg_file.txt"
+    Testfile = 'source/syntactical/test.txt'
     token_list = Lexical_unit(Testfile).getTokenList()
     cfg = LRCFG(CFGfile)
     LRtable = cfg.table
@@ -636,18 +636,3 @@ if __name__ == "__main__":
     # SR = ShiftReduce(cfg.cfgTerms, cfg.table, token_list)
     # SR.main()
     # print(cfg.cfgTerms[0].left())
-    # cfg_file暂定格式：cfg的每个符号用括号括起来，中间的大写代表非终结符，小写代表终结符
-
-    # for t in cfg.Closure({Term(["SA"],[".","S"],"dollar")}):
-    #     print(t)
-    # print('------------------------------')
-    # c = cfg.Closure({Term(["SA"],[".","S"],"dollar")})
-    # for i in cfg.Goto(c,"mul"):
-    #     print(i)
-    #
-    # cnt = 0
-    # for c in cfg.cluster:
-    #     print(cnt, '-----------------------------------')
-    #     cnt += 1
-    #     for t in c:
-    #         print(t)

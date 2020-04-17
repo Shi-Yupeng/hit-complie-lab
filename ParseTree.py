@@ -1,32 +1,3 @@
-import re
-
-class CFGTerm(object):
-    """
-    CFG条目，包含产生式的左部和右部
-    """
-
-    def __init__(self, left, right):
-        self.__left = left
-        self.__right = right
-
-    def left(self):
-        return self.__left.copy()
-
-    def right(self):
-        return self.__right.copy()
-
-    def __eq__(self, other):
-        # print(self, other)
-        if other == None:
-            return False
-        for i in range(len(self.__left)):
-            if self.__left[i] != other.__left[i]:
-                return False
-        for i in range(len(self.__right)):
-            if self.__right[i] != other.__right[i]:
-                return False
-        return True
-
 class ParseTree:
     def __init__(self, val, child_list, line_num):
         '''
@@ -34,6 +5,7 @@ class ParseTree:
         :param child_list: 装着子节点的列表。规定子节点排序从左向右。
                     如果没有子节点，那么child_list应该等于[]
         '''
+        assert child_list != None
         self.val = val
         self.child = child_list
         self.line_num = line_num
@@ -105,20 +77,41 @@ class ParseTree:
             self.__pre_order(node, depth)
             return self.str
 
-l = []
-terminals = set()
-nonterminals = set()
 
 def main():
     # 输入是读入的终结符和使用的各个产生式的标号
     # 输出是语法分析树
+    import re
+    class CFGTerm(object):
+        """
+        CFG条目，包含产生式的左部和右部
+        """
+
+        def __init__(self, left, right):
+            self.__left = left
+            self.__right = right
+
+        def left(self):
+            return self.__left.copy()
+
+        def right(self):
+            return self.__right.copy()
+
+        def __eq__(self, other):
+            # print(self, other)
+            if other == None:
+                return False
+            for i in range(len(self.__left)):
+                if self.__left[i] != other.__left[i]:
+                    return False
+            for i in range(len(self.__right)):
+                if self.__right[i] != other.__right[i]:
+                    return False
+            return True
+
     cfg_list = []
-    global terminals, nonterminals
-    # with open('ParseTreeTest.txt', 'r') as f:
-    #     lines = f.readlines()
-    #     for line in lines:
-    #         line = line.strip().split('\t')[1]
-    #         tmp = line.split(' -> ')
+    terminals = set()
+    nonterminals = set()
     with open('ParseTreeTest.txt', "r") as f:
         lines = f.readlines()
         for line in lines:
@@ -145,6 +138,7 @@ def main():
     # root = ParseTree.create_tree(input, cfg_list)
     # pre_str = root.pre_order_str(root, 0)
     # print(pre_str)
+
 
 if __name__ == '__main__':
     main()
