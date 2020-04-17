@@ -107,8 +107,12 @@ class ShiftReduce(object):
                 # print(token.value)
                 next_state = int(next_operate[1:])
                 self.shift_in(next_state, attribute)
-                reduce_formula.append(
-                    attribute + ':' + token.value + ' (' + str(token.rownumber) + ')')
+                if attribute == 'id' or attribute == 'digit':
+                    reduce_formula.append(
+                        attribute + ':' + token.value + ' (' + str(token.rownumber) + ')')
+                else:
+                    reduce_formula.append(
+                        attribute + ' (' + str(token.rownumber) + ')')
                 i += 1
             # 规约
             elif next_operate[0] == 'r':
@@ -130,9 +134,9 @@ class ShiftReduce(object):
                             reduce_formula.append(right + ' (' + str(token.rownumber) + ')')
                         reduce_formula.append(str(i))
                         # 记录错误，格式：Error at Line [token.rownumber]：错误规约：规约式
-                        wrong_reduce.append('Error at Line [' + str(token.rownumber) + ']：错误规约：' +
+                        wrong_reduce.append('Error at Line [' + str(token.rownumber) + ']：[错误规约：' +
                                             self.terms[i].left()[0] + '-->' + ' '.join(
-                            self.terms[i].right()))
+                            self.terms[i].right()) + ']')
                         break
 
                 # 寻找合法跟在A后面的符号

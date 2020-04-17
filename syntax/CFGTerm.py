@@ -6,6 +6,8 @@ class CFGTerm(object):
     def __init__(self, left, right):
         self.__left = left
         self.__right = right
+        if 'null' in right:
+            self.__right = []
 
     def left(self):
         return self.__left.copy()
@@ -31,3 +33,9 @@ class CFGTerm(object):
         for r in self.__right:
             s += (" " + r)
         return s
+
+    def __hash__(self):
+        hs = hash(self.__left)
+        for o in self.__right:
+            hs += hash(o)
+        return hs

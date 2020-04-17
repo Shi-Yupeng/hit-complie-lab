@@ -36,11 +36,12 @@ class LRCFG(object):
 
         # 构造LR项集族
         self.Items()
-        print(self.cluster[5])
-        for cluster in self.cluster[5]:
-            print(cluster)
-        for cluster in self.Goto(self.cluster[6] , 'id'):
-            print(cluster)
+        # print(self.cluster[14])
+        # for cluster in self.cluster[14]:
+        #     print(cluster)
+        # print('$')
+        # for cluster in self.Goto(self.cluster[14] , 'id'):
+        #     print(cluster)
 
         # 构造LR分析表
         self.LRtable()
@@ -145,7 +146,9 @@ class LRCFG(object):
         """
         self.cluster = []  # 项集族
         s = set({})
-        initTerm = Term(["SA"], [".", "P"], "dollar")
+        left = self.cfgTerms[0].left()
+        right = ['.'] + self.cfgTerms[0].right()
+        initTerm = Term(left, right, "dollar")
         s.add(initTerm)
         initSet = self.Closure(s)
         self.cluster.append(initSet)
