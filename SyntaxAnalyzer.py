@@ -1,4 +1,5 @@
 import sys
+import traceback
 from syntax.ParseTree import ParseTree
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from UI.MainWindow import Ui_Form
@@ -10,12 +11,12 @@ from syntax.ShiftReduce import ShiftReduce
 
 
 class Main(QMainWindow):
-    CFGfile = "source/syntax/cfg_call.txt"
-    Testfile = 'source/syntax/test_call.txt'
-    token_list = Lexical_unit(Testfile).getTokenList()
-    cfg = LRCFG(CFGfile)
-    LRtable = cfg.table
-    cfgterms = cfg.cfgTerms
+    # CFGfile = "source/syntax/cfg_sequence.txt"
+    # Testfile = 'source/syntax/test_sequence.txt'
+    # token_list = Lexical_unit(Testfile).getTokenList()
+    # cfg = LRCFG(CFGfile)
+    # LRtable = cfg.table
+    # cfgterms = cfg.cfgTerms
 
     # 初始化
     def __init__(self, parent=None):
@@ -77,7 +78,8 @@ class Main(QMainWindow):
                 self.Main_Ui.result_textBrowser.setText('猜测错产生式，无法正常分析，构建语法树失败！')
             self.Main_Ui.wrong_textBrowser.setText('\n'.join(wrong_reduce))
         except Exception as e:
-            print(repr(e))
+            exstr = traceback.format_exc()
+            print(exstr)
 
     # 保存内容
     def savetestcontent(self):
@@ -118,9 +120,12 @@ class Main(QMainWindow):
         lrui.textBrowser.setText(lrtable)
         self.lrform.show()
 
-
-if __name__ == "__main__":
+def main():
     app = QApplication(sys.argv)
     m = Main()
     m.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    import cProfile
+    cProfile.run('main()')

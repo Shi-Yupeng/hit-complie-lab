@@ -241,7 +241,7 @@ class LexicalAnalyzer(object):
     def main(FAtable, string):
         # string = re.sub(r'[\u4e00-\u9fa5]','a',string)
         dfa = FA(FAtable).dfa()
-        dfa.printDfa()
+        # dfa.printDfa()
         tkn = TokenMaker("source/token.txt")
         token_list = []
         string_lines = string.split("\n")

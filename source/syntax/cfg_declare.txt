@@ -1,0 +1,30 @@
+SA==>P
+P==>D
+P==>S
+S==>S S
+
+D==>D D
+D==>def id : D S enddef
+D==>T id ;
+
+T==>X C
+T==>record D endrecord
+
+X==>int
+X==>real
+
+C==>[ digit ] C
+C==>null
+
+S==>id = E ;
+S==>L = E ;
+
+E==>E + E
+E==>E * E
+E==>E - E
+E==>- E
+E==>( E )
+E==>id
+E==>digit
+E==>float
+E==>L

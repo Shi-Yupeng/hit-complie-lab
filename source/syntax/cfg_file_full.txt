@@ -2,36 +2,52 @@ SA==>P
 P==>D
 P==>S
 S==>S S
+
 D==>D D
-D==>proc id ; D S
+D==>proc id : D S
 D==>T id ;
 T==>X C
 T==>record D
-X==>integer
+X==>int
 X==>real
-C==>[ num ] C
+C==>[ digit ] C
 C==>null
+
 S==>id = E ;
 S==>L = E ;
-E==>E + E ;
+
+E==>E + E
 E==>E * E
+E==>E - E
 E==>- E
 E==>( E )
 E==>id
 E==>digit
+E==>float
 E==>L
+
 L==>id [ E ]
 L==>L [ E ]
-S==>if B then S
-S==>if B then S else S
-S==>while B do S
-B==>B or B
-B==>B and B
-B==>not B
+
+S==>if B then S endif
+S==>if B then S else S endif
+S==>while B do S endwhile
+B==>B || B
+B==>B && B
+B==>! B
 B==>( B )
-B==>E relop E
+B==>E RE E
 B==>true
 B==>false
-S==>call id ( EL )
-EL==>EL , E
-EL==>E
+
+RE==><
+RE==><=
+RE==>==
+RE==>!=
+RE==>>
+RE==>>=
+
+S==>call id ( ELIST ) ;
+ELIST==>ELIST , E
+ELIST==>E
+ELIST==>null

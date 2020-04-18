@@ -1,0 +1,4 @@
+rua1 rua2 = 5;
+rua = 5
+miao = 1 + 2 3;
+maio = 10 *; 

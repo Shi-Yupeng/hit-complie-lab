@@ -1,0 +1,38 @@
+SA==>P
+P==>D
+P==>S
+S==>S S
+
+S==>if B then S endif
+S==>if B then S else S endif
+S==>while B do S endwhile
+
+B==>B || B
+B==>B && B
+B==>! B
+B==>( B )
+B==>E RE E
+B==>true
+B==>false
+
+RE==><
+RE==><=
+RE==>==
+RE==>!=
+RE==>>
+RE==>>=
+
+S==>id = E ;
+S==>L = E ;
+
+L==>id [ E ]
+L==>L [ E ]
+
+E==>E + E
+E==>E * E
+E==>E - E
+E==>- E
+E==>( E )
+E==>id
+E==>digit
+E==>L

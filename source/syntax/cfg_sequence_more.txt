@@ -1,0 +1,16 @@
+B==>B || B
+B==>B && B
+B==>! B
+B==>( B )
+B==>E RE E
+
+RE==><
+RE==><=
+RE==>==
+RE==>!=
+RE==>>
+RE==>>=
+
+S==>id = E ;
+E==>E + E
+E==>digit

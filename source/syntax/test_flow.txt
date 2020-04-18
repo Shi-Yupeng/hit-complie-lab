@@ -1,0 +1,9 @@
+/*控制流测试*/
+if (! (a > b) && (c <= d) || (e == f) && false)
+	then a = b + c;
+else
+	a = b + d;
+	while (a == b) && (d >= c)
+	do a = b + a + f + e;
+	    endwhile
+	endif

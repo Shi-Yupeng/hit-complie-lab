@@ -6,6 +6,7 @@ class LRCFG(object):
     # 使用LR(1)分析法进行语法分析
 
     def __init__(self, cfg_file):  # 通过文件加载文法
+        self.cnt = 0
         self.cfgTerms = []  # 文法产生式，元素格式为CFGTerm
         self.Symbels = []  # 所有产生式中终结符和非终结符
         self.terminals = set()  # 文法用到的非终结符，包含dollar符号
@@ -20,8 +21,7 @@ class LRCFG(object):
         with open(cfg_file, "r") as f:
             lines = f.readlines()
             for line in lines:
-                line = line.strip()
-                if line == '':
+                if not "==>" in line:
                     continue
                 left = [line.split("==>")[0]]  # CFG条目左部，字符列表
                 right = line.split("==>")[1].split()  # CFG条目右部，字符列表
@@ -39,16 +39,10 @@ class LRCFG(object):
 
         # 构造LR项集族
         self.Items()
-        # print(self.cluster[14])
-        # for cluster in self.cluster[14]:
-        #     print(cluster)
-        # print('$')
-        # for cluster in self.Goto(self.cluster[14] , 'id'):
-        #     print(cluster)
 
         # 构造LR分析表
         self.LRtable()
-        # self.PrintLRtable()
+        self.PrintLRtable()
 
     def FirstForSingle(self, ALPHA):  # 单个字符的first集
         """
@@ -57,11 +51,18 @@ class LRCFG(object):
         :return:
         """
         firstSet = set({})
+        temterms = []
+        for t in self.cfgTerms:
+            if t.right() == []:
+                temterms.append(CFGTerm(t.left(),['0']))
+            else:
+                temterms.append(t)
+
         if not ALPHA.isupper():  # 小写的为终结符
             firstSet.add(ALPHA)
             return firstSet
         elif ALPHA.isupper():  # 大写的为非终结符
-            for cfgterm in self.cfgTerms:
+            for cfgterm in temterms:
                 if cfgterm.left()[0] == ALPHA and cfgterm.left()[0] != cfgterm.right()[0]:  # 跳过左递归
                     right = cfgterm.right()
                     if right[0] == "0":
@@ -78,6 +79,7 @@ class LRCFG(object):
         return firstSet
 
     def First(self, string_lst):  # 一个串的first集
+
         """
         返回串的FIRST集
         :param string_lst:
@@ -99,18 +101,22 @@ class LRCFG(object):
         SET = term_set.copy()
         TEMSET = SET.copy()
         add = True
+
         while add:
             add = False
             for term in TEMSET:
                 B = term.NextToDot()
                 beta = term.Beta()
+                beta.append(term.lookahead)
+                s = beta
+                # print(s)
                 if B != None:
                     if B.isupper():
                         for cfgTerm in self.cfgTerms:
                             if cfgTerm.left()[0] == B:
-                                beta.append(term.lookahead)
-                                s = beta
-                                for syb in self.First(s):
+                                fir = self.First(s)
+
+                                for syb in fir:
                                     right_set = cfgTerm.right()
                                     right_set.insert(0, ".")
                                     newterm = Term([B], right_set, syb)
@@ -121,6 +127,7 @@ class LRCFG(object):
             if len(TEMSET) != len(SET):
                 TEMSET = SET.copy()
                 add = True
+
         return SET
 
     def Goto(self, setI, X):
@@ -128,6 +135,7 @@ class LRCFG(object):
         输入 项目集闭包setI，文法符号X
         输出 I的后继项目集闭包
         """
+
         setJ = set({})
         for item in setI:
             if item.NextToDot() == X:
@@ -141,6 +149,8 @@ class LRCFG(object):
                 new_item = Term(newleft, right, newlookahead)
                 self.terms.append(new_item)
                 setJ.add(new_item)
+        # print(self.cnt)
+        # self.cnt += 1
         return self.Closure(setJ)
 
     def Items(self):
@@ -157,16 +167,25 @@ class LRCFG(object):
         self.cluster.append(initSet)
         add = True
         temcluster = self.cluster.copy()
+
+        symbols = set(self.Symbels)
+
         while add:
             add = False
+            cnt = 0
             for I in temcluster:
-                for X in self.Symbels:
+                for X in symbols:
                     goto = self.Goto(I, X)
                     if goto and not (goto in self.cluster):
                         self.cluster.append(goto)
+                    cnt += 1
+
+            # print(len(temcluster) , len(self.Symbels), cnt)
             if len(temcluster) != len(self.cluster.copy()):
                 temcluster = self.cluster.copy()
+                # temcluster = self.cluster
                 add = True
+        pass
 
     def LRtable(self):
         '''
@@ -182,6 +201,7 @@ class LRCFG(object):
             for term in term_set:  # 对于项集族中每个项
                 term_len = len(term.right)
                 dot_index = term.right.index('.')
+                # print(dot_index)
 
                 # 计算Goto下一个符号的项集族
                 if dot_index != term_len - 1:
@@ -193,6 +213,8 @@ class LRCFG(object):
                     index_j = self.cluster.index(goto)
                 else:
                     index_j = -1
+
+                # print(index_i, term, 'goto index', index_j)
 
                 # 如果点点后面是合法终结符
                 if (dot_index != term_len - 1 and not term.right[dot_index + 1].isupper()
@@ -209,6 +231,7 @@ class LRCFG(object):
                     right = term.right[:]
                     right.remove('.')
                     cfg_term = CFGTerm(term.left, right)
+                    # print(cfg_term)
                     cfg_index = self.cfgTerms.index(cfg_term)
                     a = term.lookahead
                     if a == 'null':
@@ -240,7 +263,7 @@ class LRCFG(object):
 
         terminals = list(self.terminals)
         nonterminals = list(self.nonterminals)
-        nonterminals.remove('SA')
+        # nonterminals.remove('SA')
         terminals.sort()
         nonterminals.sort()
 
