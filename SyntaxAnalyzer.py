@@ -124,12 +124,16 @@ class Main(QMainWindow):
 
     # 查看LR表
     def event_show_LRtable(self):
-        lrtable = self.cfg.PrintLRtable()
-        self.lrform = QMainWindow()
-        lrui = Ui_LRForm()
-        lrui.setupUi(self.lrform)
-        lrui.textBrowser.setText(lrtable)
-        self.lrform.show()
+        try:
+            lrtable = self.cfg.PrintLRtable()
+            self.lrform = QMainWindow()
+            lrui = Ui_LRForm()
+            lrui.setupUi(self.lrform)
+            lrui.textBrowser.setText(lrtable)
+            self.lrform.show()
+        except Exception:
+            exstr = traceback.format_exc()
+            print(exstr)
 
     def event_show_first(self):
         first_form = First_Ui_Form()

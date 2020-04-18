@@ -44,11 +44,12 @@ class LRCFG(object):
             self.first[arpha] = self.FirstForSingle(arpha)
             # print(self.first[arpha])
 
-        # 如果已经有了LR分析表，直接读取同名LRtable
+        # 如果已经有了LR分析表，直接读取同名LRtable获得项集族和分析表
         filename = 'source/syntax/lr_table/' + cfg_file.split('/')[-1].split('.')[0] + '.pkl'
         try:
             if os.path.isfile(filename):
                 with open(filename, 'rb') as f:
+                    self.cluster = pk.load(f)
                     self.table = pk.load(f)
                 print('已读取LR分析表')
             # 没有的话构造一下，然后保存
@@ -60,6 +61,7 @@ class LRCFG(object):
                 self.create_LRtable()
                 print('LR(1)分析表构造完毕')
                 with open(filename, 'wb') as f:
+                    pk.dump(self.cluster, f)
                     pk.dump(self.table, f)
                 print('LR分析表已保存')
         except EOFError:
