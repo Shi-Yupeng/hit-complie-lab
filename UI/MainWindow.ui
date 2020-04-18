@@ -178,7 +178,7 @@
     <attribute name="title">
      <string>语法分析</string>
     </attribute>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -215,6 +215,13 @@
          <widget class="QPushButton" name="show_LRtable_pushButton">
           <property name="text">
            <string>查看LR表</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bt_view_first">
+          <property name="text">
+           <string>查看FIRST集</string>
           </property>
          </widget>
         </item>

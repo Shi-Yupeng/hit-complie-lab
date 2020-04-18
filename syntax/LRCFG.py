@@ -42,6 +42,7 @@ class LRCFG(object):
         self.Symbels.append('dollar')
         for arpha in self.Symbels:
             self.first[arpha] = self.FirstForSingle(arpha)
+            # print(self.first[arpha])
 
         # 如果已经有了LR分析表，直接读取同名LRtable
         filename = 'source/syntax/lr_table/' + cfg_file.split('/')[-1].split('.')[0] + '.pkl'

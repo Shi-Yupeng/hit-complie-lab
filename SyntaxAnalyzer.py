@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidget
 from UI.MainWindow import Ui_Form
 from UI.CFGDefinition import Ui_Form as CFG_Ui_Form
 from UI.LRtable import Ui_Form as Ui_LRForm
+from UI.FirstForm import Ui_Form as First_Ui_Form
 from syntax.LexicalUnit import Lexical_unit
 from syntax.LRCFG import LRCFG
 from syntax.ShiftReduce import ShiftReduce
@@ -37,6 +38,7 @@ class Main(QMainWindow):
         self.Main_Ui.show_LRtable_pushButton.clicked.connect(self.event_show_LRtable)
         self.Main_Ui.save_pushButton.clicked.connect(self.savetestcontent)
         self.Main_Ui.begin_test_pushButton.clicked.connect(self.beginTest)
+        self.Main_Ui.bt_view_first.clicked.connect(self.event_show_first)
 
     # 导入CFG
     def openCFG(self):
@@ -128,6 +130,20 @@ class Main(QMainWindow):
         lrui.setupUi(self.lrform)
         lrui.textBrowser.setText(lrtable)
         self.lrform.show()
+
+    def event_show_first(self):
+        first_form = First_Ui_Form()
+        self.first_win = QMainWindow()
+        first_form.setupUi(self.first_win)
+
+        if self.cfg == None:
+            return
+        ans = ''
+        for i in self.cfg.nonterminals:
+            ans += i + '\t' + str(self.cfg.FirstForSingle(i)) + '\n'
+
+        first_form.textBrowser.setText(ans)
+        self.first_win.show()
 
 
 def main():
