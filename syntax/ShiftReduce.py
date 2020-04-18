@@ -6,10 +6,10 @@ class ShiftReduce(object):
     LRtable = None
     tokenlist = None
 
-    def __init__(self, terms, LRtable, token_list):
+    def __init__(self, terms, clusters, LRtable, token_list):
         self.symbol_stack = []  # 符号栈
         self.state_stack = [0]  # 状态栈
-        # self.clusters = clusters
+        self.clusters = clusters
         self.terms = terms
         self.LRtable = LRtable
         self.tokenlist = token_list
@@ -138,36 +138,36 @@ class ShiftReduce(object):
                     reduce_formula.append(str(reduce_number))
                 # 错误处理
                 else:
-                    exit(1)
-                #     print('发生错误, 将使用恐慌模式处理！')
-                #     nonterminal_symbol, reduce_formula = self.ErrorHandle(reduce_formula)  # 找到出错的规约式
-                #     print(reduce_formula)
-                #
-                #     # 找到A推导的产生式, 并用它规约
-                #     for i in range(len(self.terms)):
-                #         if self.terms[i].left()[0] == nonterminal_symbol:
-                #             for right in self.terms[i].right():
-                #                 reduce_formula.append(right + ' (' + str(token.rownumber) + ')')
-                #             reduce_formula.append(str(i))
-                #             # 记录错误，格式：Error at Line [token.rownumber]：错误规约：规约式
-                #             wrong_reduce.append('Error at Line [' + str(token.rownumber) + ']：[错误规约：' +
-                #                                 self.terms[i].left()[0] + '-->' + ' '.join(
-                #                 self.terms[i].right()) + ']')
-                #             break
-                #
-                #     # 寻找合法跟在A后面的符号
-                #     legal_symbol = None
-                #     for c in self.clusters[self.state_stack[-2]]:
-                #         if c.left[0] == nonterminal_symbol:
-                #             # print(self.termswithlookahead[i])
-                #             legal_symbol = c.lookahead
-                #             break
-                #
-                #     # 丢弃不可能跟着的输入
-                #     print(nonterminal_symbol, legal_symbol)
-                #     while token != 'dollar' and token.attribute != legal_symbol:
-                #         i += 1
-                #         token = self.tokenlist[i]
+                    # exit(1)
+                    print('发生错误, 将使用恐慌模式处理！')
+                    nonterminal_symbol, reduce_formula = self.ErrorHandle(reduce_formula)  # 找到出错的规约式
+                    print(reduce_formula)
+
+                    # 找到A推导的产生式, 并用它规约
+                    for i in range(len(self.terms)):
+                        if self.terms[i].left()[0] == nonterminal_symbol:
+                            for right in self.terms[i].right():
+                                reduce_formula.append(right + ' (' + str(token.rownumber) + ')')
+                            reduce_formula.append(str(i))
+                            # 记录错误，格式：Error at Line [token.rownumber]：错误规约：规约式
+                            wrong_reduce.append('Error at Line [' + str(token.rownumber) + ']：[错误规约：' +
+                                                self.terms[i].left()[0] + '-->' + ' '.join(
+                                self.terms[i].right()) + ']')
+                            break
+
+                    # 寻找合法跟在A后面的符号
+                    legal_symbol = None
+                    for c in self.clusters[self.state_stack[-2]]:
+                        if c.left[0] == nonterminal_symbol:
+                            # print(self.termswithlookahead[i])
+                            legal_symbol = c.lookahead
+                            break
+
+                    # 丢弃不可能跟着的输入
+                    print(nonterminal_symbol, legal_symbol)
+                    while token != 'dollar' and token.attribute != legal_symbol:
+                        i += 1
+                        token = self.tokenlist[i]
                 # print(reduce_formula)
         except:
             print(traceback.format_exc())

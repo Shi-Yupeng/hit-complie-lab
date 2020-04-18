@@ -80,7 +80,7 @@ class Main(QMainWindow):
         try:
             self.Main_Ui.result_textBrowser.clear()
             self.Main_Ui.wrong_textBrowser.clear()
-            input, wrong_reduce = ShiftReduce(self.cfgterms, self.LRtable, self.token_list).main()
+            input, wrong_reduce = ShiftReduce(self.cfgterms, self.cfg.cluster, self.LRtable, self.token_list).main()
             try:
                 root = ParseTree.create_tree(input, self.cfgterms)
                 pre_str = root.pre_order_str(root, 0)
