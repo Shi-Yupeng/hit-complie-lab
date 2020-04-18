@@ -4,10 +4,10 @@ P==>S
 S==>S S
 
 D==>D D
-D==>proc id : D S
+D==>def id : D S enddef
 D==>T id ;
 T==>X C
-T==>record D
+T==>record D endrecord
 X==>int
 X==>real
 C==>[ digit ] C
