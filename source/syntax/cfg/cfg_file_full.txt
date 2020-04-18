@@ -15,7 +15,8 @@ C==>null
 
 S==>id = E ;
 S==>L = E ;
-
+L==>id [ E ]
+L==>L [ E ]
 E==>E + E
 E==>E * E
 E==>E - E
@@ -25,9 +26,6 @@ E==>id
 E==>digit
 E==>float
 E==>L
-
-L==>id [ E ]
-L==>L [ E ]
 
 S==>if B then S endif
 S==>if B then S else S endif

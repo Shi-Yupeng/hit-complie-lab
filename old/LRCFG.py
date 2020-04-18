@@ -1,6 +1,3 @@
-import os
-import pickle as pk
-
 from syntax.CFGTerm import CFGTerm
 from syntax.Term import Term
 
@@ -9,6 +6,7 @@ class LRCFG(object):
     # 使用LR(1)分析法进行语法分析
 
     def __init__(self, cfg_file):  # 通过文件加载文法
+        self.cnt = 0
         self.cfgTerms = []  # 文法产生式，元素格式为CFGTerm
         self.Symbels = []  # 所有产生式中终结符和非终结符
         self.terminals = set()  # 文法用到的非终结符，包含dollar符号
@@ -16,9 +14,8 @@ class LRCFG(object):
         self.terms = []  # 所有LR(1)条目，格式：Term
         self.cluster = None  # 项集族
         self.table = None  # LR分析表 格式：table{'action':{(i, a):sj}, 'goto':{(i, B): j} }
-        self.cnt = 0
+
         dot = "."
-        self.first = {}
 
         # 收集终结符和非终结符
         with open(cfg_file, "r") as f:
@@ -39,36 +36,13 @@ class LRCFG(object):
                         self.terminals.add(r)
                 self.cfgTerms.append(CFGTerm(left, right))
         self.terminals.add('dollar')
-        self.Symbels.append('dollar')
-        for arpha in self.Symbels:
-            self.first[arpha] = self.FirstForSingle(arpha)
 
-        # 如果已经有了LR分析表，直接读取同名LRtable
-        filename = 'source/syntax/lr_table/' + cfg_file.split('/')[-1].split('.')[0] + '.pkl'
-        try:
-            if os.path.isfile(filename):
-                with open(filename, 'rb') as f:
-                    self.table = pk.load(f)
-                print('已读取LR分析表')
-            # 没有的话构造一下，然后保存
-            else:
-                # 构造LR项集族
-                self.Items()
-                print('项集族构造完毕')
-                # 构造LR分析表
-                self.create_LRtable()
-                print('LR(1)分析表构造完毕')
-                with open(filename, 'wb') as f:
-                    pk.dump(self.table, f)
-                print('LR分析表已保存')
-        except EOFError:
-            self.Items()
-            print('项集族构造完毕')
-            self.create_LRtable()
-            print('LR(1)分析表构造完毕')
-            with open(filename, 'wb') as f:
-                pk.dump(self.table, f)
-            print('LR分析表已保存')
+        # 构造LR项集族
+        self.Items()
+
+        # 构造LR分析表
+        self.LRtable()
+        self.PrintLRtable()
 
     def FirstForSingle(self, ALPHA):  # 单个字符的first集
         """
@@ -76,14 +50,14 @@ class LRCFG(object):
         :param ALPHA:
         :return:
         """
-        self.cnt += 1
-        temterms = []
-        for i in self.cfgTerms:
-            if len(i.right()) == 0:
-                temterms.append(CFGTerm(i.left(), ['0']))
-            else:
-                temterms.append(i)
         firstSet = set({})
+        temterms = []
+        for t in self.cfgTerms:
+            if t.right() == []:
+                temterms.append(CFGTerm(t.left(),['0']))
+            else:
+                temterms.append(t)
+
         if not ALPHA.isupper():  # 小写的为终结符
             firstSet.add(ALPHA)
             return firstSet
@@ -102,27 +76,24 @@ class LRCFG(object):
                         if not "0" in self.FirstForSingle(right[cnt]):
                             firstSet.discard("0")
                             firstSet = firstSet.union(self.FirstForSingle(right[cnt]))
-
         return firstSet
 
     def First(self, string_lst):  # 一个串的first集
+
         """
         返回串的FIRST集
         :param string_lst:
         :return:
         """
-
         cnt = 0
         SET = set({})
-
-        while cnt < len(string_lst) and "0" in self.first[string_lst[cnt]]:
-            SET = SET.union(self.first[string_lst[cnt]])
+        while cnt < len(string_lst) and "0" in self.FirstForSingle(string_lst[cnt]):
+            SET = SET.union(self.FirstForSingle(string_lst[cnt]))
             cnt += 1
-
         if cnt < len(string_lst):
-            if not "0" in self.first[string_lst[cnt]]:
+            if not "0" in self.FirstForSingle(string_lst[cnt]):
                 SET.discard("0")
-                SET = SET.union(self.first[string_lst[cnt]])
+                SET = SET.union(self.FirstForSingle(string_lst[cnt]))
 
         return SET
 
@@ -130,6 +101,7 @@ class LRCFG(object):
         SET = term_set.copy()
         TEMSET = SET.copy()
         add = True
+
         while add:
             add = False
             for term in TEMSET:
@@ -137,14 +109,14 @@ class LRCFG(object):
                 beta = term.Beta()
                 beta.append(term.lookahead)
                 s = beta
+                # print(s)
                 if B != None:
                     if B.isupper():
                         for cfgTerm in self.cfgTerms:
                             if cfgTerm.left()[0] == B:
+                                fir = self.First(s)
 
-                                fsrt = self.First(s)
-
-                                for syb in fsrt:
+                                for syb in fir:
                                     right_set = cfgTerm.right()
                                     right_set.insert(0, ".")
                                     newterm = Term([B], right_set, syb)
@@ -155,6 +127,7 @@ class LRCFG(object):
             if len(TEMSET) != len(SET):
                 TEMSET = SET.copy()
                 add = True
+
         return SET
 
     def Goto(self, setI, X):
@@ -162,10 +135,8 @@ class LRCFG(object):
         输入 项目集闭包setI，文法符号X
         输出 I的后继项目集闭包
         """
-        import time
 
         setJ = set({})
-
         for item in setI:
             if item.NextToDot() == X:
                 newleft = item.left
@@ -178,79 +149,45 @@ class LRCFG(object):
                 new_item = Term(newleft, right, newlookahead)
                 self.terms.append(new_item)
                 setJ.add(new_item)
-
-        rtn = self.Closure(setJ)
-
-        return rtn
-
-    def load(self):
-        self.cluster = []
-        import json
-        with open('save.json', 'r') as f:
-            streams = f.read()
-
-        jsn = json.loads(streams)
-        length = len(jsn)
-        for i in range(length):
-            TEMSET = set({})
-            clength = len(jsn[str(i)])
-            for j in range(clength):
-                t = jsn[str(i)][str(j + 1)]
-                term = Term(t['left'], t['right'], t['lookahead'])
-                TEMSET.add(term)
-            self.cluster.append(TEMSET)
-
-    def save(self, cluster):
-        import json
-        jsn = {}
-        for i in range(len(cluster)):
-            k = 0
-            jsn[i] = {}
-            for term in cluster[i]:
-                k += 1
-                jsn[i][k] = {}
-                jsn[i][k]['left'] = term.left
-                jsn[i][k]['right'] = term.right
-                jsn[i][k]['lookahead'] = term.lookahead
-        streams = json.dumps(jsn)
-        with open('save.json', 'w') as f:
-            f.write(streams)
+        # print(self.cnt)
+        # self.cnt += 1
+        return self.Closure(setJ)
 
     def Items(self):
-        import os
-        if os.path.isfile('save.json'):
-            # self.load()
-            pass
-        else:
-            """
-            构造项集族
-            """
-            self.cluster = []  # 项集族
-            s = set({})
-            left = self.cfgTerms[0].left()
-            right = ['.'] + self.cfgTerms[0].right()
-            initTerm = Term(left, right, "dollar")
-            s.add(initTerm)
-            initSet = self.Closure(s)
-            self.cluster.append(initSet)
-            add = True
-            temcluster = self.cluster.copy()
-            while add:
-                add = False
-                for I in temcluster:
-                    for X in self.Symbels:
+        """
+        构造项集族
+        """
+        self.cluster = []  # 项集族
+        s = set({})
+        left = self.cfgTerms[0].left()
+        right = ['.'] + self.cfgTerms[0].right()
+        initTerm = Term(left, right, "dollar")
+        s.add(initTerm)
+        initSet = self.Closure(s)
+        self.cluster.append(initSet)
+        add = True
+        temcluster = self.cluster.copy()
 
-                        goto = self.Goto(I, X)
+        symbols = set(self.Symbels)
 
-                        if goto and not (goto in self.cluster):
-                            self.cluster.append(goto)
-                print('项集族生成个数：', len(temcluster))
-                if len(temcluster) != len(self.cluster.copy()):
-                    temcluster = self.cluster.copy()
-                    add = True
-            # self.save(self.cluster)
+        while add:
+            add = False
+            cnt = 0
+            for I in temcluster:
+                for X in symbols:
+                    goto = self.Goto(I, X)
+                    if goto and not (goto in self.cluster):
+                        self.cluster.append(goto)
+                    cnt += 1
 
-    def create_LRtable(self):
+            # print(len(temcluster) , len(self.Symbels), cnt)
+            if len(temcluster) != len(self.cluster.copy()):
+                temcluster = self.cluster.copy()
+                # temcluster = self.cluster
+                add = True
+        pass
+
+    def LRtable(self):
         '''
         Author: 欧龙燊
         使用规范LR(1)项集族，构造LR分析表

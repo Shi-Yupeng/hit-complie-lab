@@ -1,5 +1,7 @@
+import os
 import sys
 import traceback
+import pickle as pk
 from syntax.ParseTree import ParseTree
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from UI.MainWindow import Ui_Form
@@ -11,19 +13,21 @@ from syntax.ShiftReduce import ShiftReduce
 
 
 class Main(QMainWindow):
-    # CFGfile = "source/syntax/cfg_sequence.txt"
-    # Testfile = 'source/syntax/test_sequence.txt'
-    # token_list = Lexical_unit(Testfile).getTokenList()
-    # cfg = LRCFG(CFGfile)
-    # LRtable = cfg.table
-    # cfgterms = cfg.cfgTerms
-
     # 初始化
     def __init__(self, parent=None):
         super(Main, self).__init__(parent)
         self.Main_Ui = Ui_Form()
         self.Main_Ui.setupUi(self)
         self.bindbutton()
+
+        self.CFGfile = None
+        self.LRtable = None
+        self.Testfile = None
+        self.cfg = None
+        self.cfgform = None
+        self.cfgterms = None
+        self.lrform = None
+        self.token_list = None
 
     # 绑定按钮
     def bindbutton(self):
@@ -36,12 +40,20 @@ class Main(QMainWindow):
 
     # 导入CFG
     def openCFG(self):
-        fname = QFileDialog.getOpenFileName(self, caption='Open file', directory='.')
-        if fname[0]:
-            self.CFGfile = fname[0]
-        self.cfg = LRCFG(self.CFGfile)
-        self.LRtable = self.cfg.table
-        self.cfgterms = self.cfg.cfgTerms
+        try:
+            # 选择文件
+            fname = QFileDialog.getOpenFileName(self, caption='Open file', directory='.')
+            if fname[0]:
+                self.CFGfile = fname[0]
+            else:
+                return
+
+            self.cfg = LRCFG(self.CFGfile)
+            self.LRtable = self.cfg.table
+            self.cfgterms = self.cfg.cfgTerms
+        except Exception:
+            exstr = traceback.format_exc()
+            print(exstr)
 
     # 导入测试文件
     def opentestfile(self):
@@ -50,7 +62,6 @@ class Main(QMainWindow):
             if fname[0]:
                 self.Testfile = fname[0]
                 self.token_list = Lexical_unit(self.Testfile).getTokenList()
-                # print(self.Testfile)
                 with open(fname[0], 'r', encoding='utf8') as f:
                     strings = f.read()
 
@@ -61,15 +72,13 @@ class Main(QMainWindow):
                     self.Main_Ui.tableWidget_2.setItem(i, 0, QTableWidgetItem(strings[i]))
         except Exception as e:
             pass
-            # print(e)
 
     # 开始测试
     def beginTest(self):
         try:
             self.Main_Ui.result_textBrowser.clear()
             self.Main_Ui.wrong_textBrowser.clear()
-            input, wrong_reduce = ShiftReduce(self.cfg.cluster, self.cfgterms, self.LRtable,
-                                              self.token_list).main()
+            input, wrong_reduce = ShiftReduce(self.cfgterms, self.LRtable, self.token_list).main()
             try:
                 root = ParseTree.create_tree(input, self.cfgterms)
                 pre_str = root.pre_order_str(root, 0)
@@ -120,12 +129,13 @@ class Main(QMainWindow):
         lrui.textBrowser.setText(lrtable)
         self.lrform.show()
 
+
 def main():
     app = QApplication(sys.argv)
     m = Main()
     m.show()
     sys.exit(app.exec_())
 
+
 if __name__ == "__main__":
-    import cProfile
-    cProfile.run('main()')
+    main()

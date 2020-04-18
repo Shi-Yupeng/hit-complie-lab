@@ -6,10 +6,10 @@ class ShiftReduce(object):
     LRtable = None
     tokenlist = None
 
-    def __init__(self, clusters, terms, LRtable, token_list):
+    def __init__(self, terms, LRtable, token_list):
         self.symbol_stack = []  # 符号栈
         self.state_stack = [0]  # 状态栈
-        self.clusters = clusters
+        # self.clusters = clusters
         self.terms = terms
         self.LRtable = LRtable
         self.tokenlist = token_list

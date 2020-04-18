@@ -1,4 +1,0 @@
-def inc:
-    int f;
-    real[2] g;
-    enddef
