@@ -29,12 +29,13 @@ class SemanticAnalysis:
         # 语义分析器相关变量
         self.root = None # 分析树的根节点
         self.board = Board() # 保存生成的中间代码
-        self.Generator = Generator(self.board)
+        self.generator = Generator(self.board)
 
     def generate(self):
         '''
         生成中间代码，保存在self.board中
         '''
+        # func = getattr(self.)
         pass
 
     def get_parse_tree(self):
