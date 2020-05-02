@@ -6,10 +6,11 @@ class ParseTree:
                     如果没有子节点，那么child_list应该等于[]
         '''
         assert child_list != None
-        self.val = val
-        self.child = child_list
-        self.line_num = line_num
-        self.str = ''
+        self.val = val # 节点的值，应该是只有叶节点会用到
+        self.child = child_list # 子节点列表
+        self.line_num = line_num # 文法符号对应行号
+        self.str = '' # 遍历用字符串
+        self.cfg_index = None # 规约到该节点时，使用的产生式编号。类型：int。叶子节点的该值为None
 
     def __str__(self):
         return self.val
@@ -32,7 +33,6 @@ class ParseTree:
             else:
                 cfg_index = int(i)
                 cfg = cfg_list[cfg_index]
-                child_num = len(cfg.right())
                 child = []
                 for i in cfg.right():
                     if i == 'epsilon':
@@ -46,6 +46,7 @@ class ParseTree:
                         line_num = i.line_num
                         break
                 t = ParseTree(cfg.left()[0], child, line_num)
+                t.cfg_index = cfg_index
                 ans.append(t)
 
         assert len(ans) == 1

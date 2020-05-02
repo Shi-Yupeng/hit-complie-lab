@@ -3,6 +3,7 @@ from syntax.LexicalUnit import Lexical_unit
 from syntax.ParseTree import ParseTree
 from syntax.ShiftReduce import ShiftReduce
 from semantic.Board import Board
+from semantic.CodeGenerator import Generator
 
 
 def main():
@@ -10,6 +11,7 @@ def main():
     analyzer.event_get_CFGfile()
     analyzer.event_get_test_file()
     analyzer.get_parse_tree()
+    analyzer.generate()
 
 class SemanticAnalysis:
     '''
@@ -25,8 +27,15 @@ class SemanticAnalysis:
         self.token_list = None
 
         # 语义分析器相关变量
-        self.root = None
-        self.board = Board()
+        self.root = None # 分析树的根节点
+        self.board = Board() # 保存生成的中间代码
+        self.Generator = Generator(self.board)
+
+    def generate(self):
+        '''
+        生成中间代码，保存在self.board中
+        '''
+        pass
 
     def get_parse_tree(self):
         '''
