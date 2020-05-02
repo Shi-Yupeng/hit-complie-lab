@@ -1,4 +1,0 @@
-1、文法设计，cfg设计，根据题目需求，我们每个人设计几个
-2、syntacticanalyzer.py中的todo
-3、gui衔接：王程、欧龙燊
-4、lab1衔接:石宇鹏
