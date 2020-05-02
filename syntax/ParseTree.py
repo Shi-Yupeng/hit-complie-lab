@@ -6,7 +6,7 @@ class ParseTree:
                     如果没有子节点，那么child_list应该等于[]
         '''
         assert child_list != None
-        self.val = val # 节点的值，应该是只有叶节点会用到
+        self.val = val # 节点的值，或者节点的名字
         self.child = child_list # 子节点列表
         self.line_num = line_num # 文法符号对应行号
         self.str = '' # 遍历用字符串
