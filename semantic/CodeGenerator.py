@@ -6,7 +6,17 @@ def main():
 
 class Generator:
     def __init__(self, board):
-        self.board = board
+        self.board = board # 记录中间代码生成结果
+
+    def get_func_name(self, node):
+        '''
+        获取一个节点对应的SDT函数
+        :param: node 节点
+        :return: node对应SDT的函数
+        '''
+        func_name = 'g' + str(node.cfg_index) + '_' + node.val
+        func = getattr(self, func_name)
+        return func
 
     def g0_SA(self):
         print('rua!')
@@ -15,8 +25,16 @@ class Generator:
     def g1_P(self):
         pass
 
-    def g2_P(self):
+    def g2_P(self, child):
         print('执行g2_P')
+        assert len(child) == 1
+        print('rua')
+
+        S_next = self.board.new_label()
+        next_node = child[0]
+        func = self.get_func_name(next_node)
+        func(S_next)
+        self.board.label(S_next)
 
         pass
 
@@ -89,7 +107,10 @@ class Generator:
     def g25_E(self):
         pass
 
-    def g26_S(self):
+    def g26_S(self, S_next):
+        print('jump suc')
+        self.board.append('goto', '-', '-', '2')
+        self.board.append('goto', '-', '-', S_next)
         pass
 
     def g27_S(self):
@@ -148,6 +169,8 @@ class Generator:
 
     def g45_ELIST(self):
         pass
+
+
 
 if __name__ == '__main__':
     main()

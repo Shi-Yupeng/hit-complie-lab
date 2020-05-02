@@ -35,9 +35,9 @@ class SemanticAnalysis:
         '''
         生成中间代码，保存在self.board中
         '''
-        func_name = 'g' + str(self.root.cfg_index) + '_' + self.root.val
-        func = getattr(self.generator, func_name)
-        func()
+        func = self.get_func_name(self.root)
+        func(self.root.child)
+        self.board.label_scan()
         print('中间代码生成完成！')
 
     def get_parse_tree(self):
@@ -67,6 +67,15 @@ class SemanticAnalysis:
         self.Testfile = 'source/semantic/test/bool.txt'
         self.token_list = Lexical_unit(self.Testfile).getTokenList()
 
+    def get_func_name(self, node):
+        '''
+        获取一个节点对应的SDT函数
+        :param: node 节点
+        :return: node对应SDT的函数
+        '''
+        func_name = 'g' + str(node.cfg_index) + '_' + node.val
+        func = getattr(self.generator, func_name)
+        return func
 
 if __name__ == '__main__':
     main()
