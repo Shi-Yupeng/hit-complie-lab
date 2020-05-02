@@ -35,7 +35,7 @@ class SemanticAnalysis:
         '''
         生成中间代码，保存在self.board中
         '''
-        func = self.get_func_name(self.root)
+        func = self.get_func(self.root)
         func(self.root.child)
         self.board.label_scan()
         print('中间代码生成完成！')
@@ -67,7 +67,7 @@ class SemanticAnalysis:
         self.Testfile = 'source/semantic/test/bool.txt'
         self.token_list = Lexical_unit(self.Testfile).getTokenList()
 
-    def get_func_name(self, node):
+    def get_func(self, node):
         '''
         获取一个节点对应的SDT函数
         :param: node 节点

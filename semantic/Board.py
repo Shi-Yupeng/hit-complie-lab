@@ -13,7 +13,7 @@ class Board:
                           # 如果运算分量缺省，用'-'表示
         self.label_cnt = 1 # 生成的下一个标号的编号
         self.label_dic = {} # 存放临时标号和行号的对应关系
-                            # 格式：   'Lb_1": 3, 'Lb_2': 17, ...
+                            # 格式：   'Lb_1': 3, 'Lb_2': 17, ...
 
     def append(self, t1, t2, t3, t4):
         '''

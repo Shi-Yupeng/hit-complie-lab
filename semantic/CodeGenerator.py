@@ -8,7 +8,7 @@ class Generator:
     def __init__(self, board):
         self.board = board # 记录中间代码生成结果
 
-    def get_func_name(self, node):
+    def get_func(self, node):
         '''
         获取一个节点对应的SDT函数
         :param: node 节点
@@ -26,14 +26,15 @@ class Generator:
         pass
 
     def g2_P(self, child):
-        print('执行g2_P')
+        print('2号产生式')
         assert len(child) == 1
-        print('rua')
 
         S_next = self.board.new_label()
-        next_node = child[0]
-        func = self.get_func_name(next_node)
-        func(S_next)
+
+        S = child[0] # 下一个节点
+        func = self.get_func(S)
+        func(S.child, S_next)
+
         self.board.label(S_next)
 
         pass
@@ -107,11 +108,26 @@ class Generator:
     def g25_E(self):
         pass
 
-    def g26_S(self, S_next):
-        print('jump suc')
-        self.board.append('goto', '-', '-', '2')
-        self.board.append('goto', '-', '-', S_next)
-        pass
+    def g26_S(self, child, S_next):
+        # S -> if B then S endif
+        print('26号产生式')
+        assert len(child) == 5
+        # self.board.append('goto', '-', '-', '2')
+        # self.board.append('goto', '-', '-', S_next)
+        B_true = self.board.new_label()
+        B_false = S_next
+
+        B = child[1]
+        func = self.get_func(B)
+        func(B.child, B_true, B_false)
+
+        self.board.label(B_true)
+        S1_next = S_next
+
+        S1 = child[3]
+        func = self.get_func(S1)
+        func(S1.child, S1_next)
+
 
     def g27_S(self):
         pass
