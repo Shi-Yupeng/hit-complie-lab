@@ -9,12 +9,15 @@ class Generator:
         self.board = board
 
     def g0_SA(self):
+        print('rua!')
         pass
 
     def g1_P(self):
         pass
 
     def g2_P(self):
+        print('执行g2_P')
+
         pass
 
     def g3_S(self):

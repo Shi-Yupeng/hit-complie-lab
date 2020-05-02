@@ -35,8 +35,10 @@ class SemanticAnalysis:
         '''
         生成中间代码，保存在self.board中
         '''
-        # func = getattr(self.)
-        pass
+        func_name = 'g' + str(self.root.cfg_index) + '_' + self.root.val
+        func = getattr(self.generator, func_name)
+        func()
+        print('中间代码生成完成！')
 
     def get_parse_tree(self):
         '''
