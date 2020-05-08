@@ -41,7 +41,7 @@ class Board:
         '''
         for i in self.content:
             print(
-                '{:3}: {:>10}, {:>10}, {:>10}, {:>10}'.format(i, self.content[i][0], self.content[i][1],
+                '{:3}: {:>10}, {:>25}, {:>25}, {:>10}'.format(i, self.content[i][0], self.content[i][1],
                                                           self.content[i][2], self.content[i][3]))
         print('{:3}:'.format(self.line_cnt))
 
