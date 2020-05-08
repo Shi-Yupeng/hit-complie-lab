@@ -4,14 +4,18 @@ from syntax.ParseTree import ParseTree
 from syntax.ShiftReduce import ShiftReduce
 from semantic.Board import Board
 from semantic.CodeGenerator import Generator
-
+import traceback
 
 def main():
     analyzer = SemanticAnalysis()
     analyzer.event_get_CFGfile()
     analyzer.event_get_test_file()
     analyzer.get_parse_tree()
-    analyzer.generate()
+    try:
+        analyzer.generate()
+    except Exception:
+        exstr = traceback.format_exc()
+        print(exstr)
 
 class SemanticAnalysis:
     '''
@@ -36,8 +40,9 @@ class SemanticAnalysis:
         生成中间代码，保存在self.board中
         '''
         func = self.get_func(self.root)
-        func(self.root.child)
+        func(self.root)
         self.board.label_scan()
+        self.board.show_result()
         print('中间代码生成完成！')
 
     def get_parse_tree(self):
@@ -64,7 +69,7 @@ class SemanticAnalysis:
         '''
         读测试文件，生成TOKEN列表
         '''
-        self.Testfile = 'source/semantic/test/bool.txt'
+        self.Testfile = 'source/semantic/test/assignment_array.txt' #syp更改测试文件路径
         self.token_list = Lexical_unit(self.Testfile).getTokenList()
 
     def get_func(self, node):

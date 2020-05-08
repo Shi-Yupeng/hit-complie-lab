@@ -1,0 +1,12 @@
+def inc:
+    int f;
+    real[2] g;
+    g = g + f;
+    enddef
+int i;
+int [2][3] a;
+real b;
+record
+    int[2] c;
+endrecord student;
+call inc();

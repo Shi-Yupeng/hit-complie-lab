@@ -11,6 +11,16 @@ class ParseTree:
         self.line_num = line_num # 文法符号对应行号
         self.str = '' # 遍历用字符串
         self.cfg_index = None # 规约到该节点时，使用的产生式编号。类型：int。叶子节点的该值为None
+        self.type = None#spy类型
+        self.width = None#spy宽度
+        self.addr = None #spy地址值
+
+        self.array = None# wc数组名(综合属性)
+        self.offset = None#wc数组元素的偏移量(综合属性)
+        self.array_base = None#数组基地址(综合属性)
+
+        self.inh = {} # 继承属性
+        self.syn = {} # 综合属性
 
     def __str__(self):
         return self.val

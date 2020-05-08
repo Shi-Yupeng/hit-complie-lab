@@ -1,0 +1,11 @@
+int[10][10][10] a;
+int i;
+int j;
+int k;
+int b;
+
+i = 2;
+j = 3;
+k = 5;
+b = 3;
+a[i][j][k] = b;

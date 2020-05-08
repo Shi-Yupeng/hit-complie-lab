@@ -1,0 +1,24 @@
+int i;
+int j;
+real f;
+int[10] arr;
+def inc:
+    int f;
+    real[2] g;
+    g = g + f;
+    enddef
+
+int [2][3] a;
+real b;
+record
+    int[2] c;
+endrecord student;
+i = 3;
+
+if i > 2 then
+	j = 4;
+else
+	j = 5;
+endif
+
+i = 0;

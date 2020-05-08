@@ -122,7 +122,7 @@ class ShiftReduce(object):
                     # print(token.value)
                     next_state = int(next_operate[1:])
                     self.shift_in(next_state, attribute)
-                    if attribute == 'id' or attribute == 'digit':
+                    if attribute == 'id' or attribute == 'digit' or attribute == 'float':
                         reduce_formula.append(
                             attribute + ':' + token.value + ' (' + str(token.rownumber) + ')')
                     else:
