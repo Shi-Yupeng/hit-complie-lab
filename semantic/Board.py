@@ -29,6 +29,7 @@ class Board:
         self.w = None  # syp 用于SDT设计时的临时变量
         self.Q = None  # syp 用于SDT设计时的临时变量
         self.symble_set = []  # syp符号表，中间数据是SymbleTerm类型
+        self.string = None
 
     def enter(self, value, type_, offset):  # syp 在符号表中添加条目，并且添加到四元式代码中
         ST = SymbleTerm(value, type_, offset)
@@ -44,6 +45,19 @@ class Board:
                 '{:3}: {:>10}, {:>25}, {:>25}, {:>10}'.format(i, self.content[i][0], self.content[i][1],
                                                           self.content[i][2], self.content[i][3]))
         print('{:3}:'.format(self.line_cnt))
+
+    def get_result(self):
+        '''
+        获得中间代码生成结果的字符串
+        '''
+        if self.string != None:
+            return self.string
+        else:
+            self.string = ''
+            for i in self.content:
+                self.string += '{:>10}, {:>15}, {:>15}, {:>15}\n'.format(self.content[i][0], self.content[i][1],
+                                                                       self.content[i][2], self.content[i][3])
+            return self.string
 
     def append(self, t1, t2, t3, t4):
         '''
@@ -76,6 +90,7 @@ class Board:
         self.content.clear()
         self.label_cnt = 1
         self.label_dic.clear()
+        self.string = None
 
     def new_temp(self):
         '''

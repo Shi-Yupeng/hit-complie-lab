@@ -146,7 +146,7 @@ class Generator:
     def g10_X(self, X):  # syp
         assert len(X.child) == 1
         real = X.child[0]
-        X.type = real
+        X.type = real.val
         X.width = 8
 
     def g11_C(self, C):  # syp
@@ -219,10 +219,15 @@ class Generator:
             print('数组下标不能引用浮点数')
         L.type = L.array.elem
 
-        if L.array.elem == 'int':
-            L.width = 4
-        elif L.array.elem == 'real':
-            L.width = 8
+        type = L.array.elem
+        while True:
+            if type == 'int':
+                L.width = 4
+                break
+            elif type == 'real':
+                L.width = 8
+                break
+            type = type.elem
         L.offset = self.board.new_temp()
         self.board.append('*', E.addr, str(L.width), L.offset)
 
@@ -363,12 +368,14 @@ class Generator:
     # E==>digit
     def g23_E(self, E):
         digit = E.child[0]
+        digit.type = 'int'
         E.addr = digit.val.split(':')[1]
         E.type = digit.type
 
     # E==>float
     def g24_E(self, E):
         float = E.child[0]
+        float.type = 'real'
         E.addr = float.val.split(':')[1]
         E.type = float.type
 

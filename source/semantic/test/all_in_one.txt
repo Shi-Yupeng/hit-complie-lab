@@ -16,9 +16,9 @@ endrecord student;
 i = 3;
 
 if i > 2 then
-	j = 4;
+    j = 4;
 else
-	j = 5;
+    j = 5;
 endif
 
 i = 0;

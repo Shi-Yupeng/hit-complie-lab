@@ -1,3 +1,9 @@
+import sys
+
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
+
+from UI.MainWindow import Ui_Form
+
 from syntax.LRCFG import LRCFG
 from syntax.LexicalUnit import Lexical_unit
 from syntax.ParseTree import ParseTree
@@ -7,15 +13,72 @@ from semantic.CodeGenerator import Generator
 import traceback
 
 def main():
-    analyzer = SemanticAnalysis()
-    analyzer.event_get_CFGfile()
-    analyzer.event_get_test_file()
-    analyzer.get_parse_tree()
-    try:
-        analyzer.generate()
-    except Exception:
-        exstr = traceback.format_exc()
-        print(exstr)
+    app = QApplication(sys.argv)
+    m = Main()
+    m.show()
+    sys.exit(app.exec_())
+
+# def main():
+#     analyzer = SemanticAnalysis()
+#     analyzer.event_get_CFGfile()
+#     analyzer.event_get_test_file()
+#     analyzer.get_parse_tree()
+#     try:
+#         analyzer.generate()
+#     except Exception:
+#         exstr = traceback.format_exc()
+#         print(exstr)
+
+class Main(QMainWindow):
+    def __init__(self, parent=None):
+        super(Main, self).__init__()
+        self.main_window = Ui_Form()
+        self.main_window.setupUi(self)
+
+        self.analyzer = SemanticAnalysis()
+        self.analyzer.get_CFGfile()
+
+        self.bind_button()
+
+    def bind_button(self):
+        self.main_window.semantic_lb_import.clicked.connect(self.import_source_file)
+        self.main_window.semantic_lb_generate.clicked.connect(self.generate_code)
+
+    def import_source_file(self):
+        fname = QFileDialog.getOpenFileName(self, caption='Open file', directory='.')
+        try:
+            if fname[0]:
+                self.source_file = fname[0]
+                with open(fname[0], 'r', encoding='utf8') as f:
+                    strings = f.read()
+                strings = strings.split('\n')
+                self.main_window.semantic_table_source.setRowCount(len(strings))
+                self.main_window.semantic_table_source.clear()
+                for i in range(len(strings)):
+                    self.main_window.semantic_table_source.setItem(i, 0, QTableWidgetItem(strings[i]))
+
+                self.analyzer.set_test_file(self.source_file)
+                self.analyzer.get_parse_tree()
+        except Exception as e:
+            pass
+
+    def generate_code(self):
+        try:
+            print('shit')
+            self.analyzer.generate()
+            ans = self.analyzer.board.get_result()
+            lines = ans.split('\n')
+            print('haha')
+            self.main_window.semantic_table_out.setRowCount(len(lines))
+            self.main_window.semantic_table_out.clear()
+            for i in range(len(lines)):
+                self.main_window.semantic_table_out.setItem(i, 0, QTableWidgetItem(lines[i]))
+            print('alive')
+        except Exception:
+            exstr = traceback.format_exc()
+            self.main_window.semantic_text_error.append(exstr)
+
+
 
 class SemanticAnalysis:
     '''
@@ -42,8 +105,8 @@ class SemanticAnalysis:
         func = self.get_func(self.root)
         func(self.root)
         self.board.label_scan()
-        self.board.show_result()
-        print('中间代码生成完成！')
+        # self.board.show_result()
+        # print('中间代码生成完成！')
 
     def get_parse_tree(self):
         '''
@@ -56,7 +119,7 @@ class SemanticAnalysis:
         print(pre_str)
         self.root = root
 
-    def event_get_CFGfile(self):
+    def get_CFGfile(self):
         '''
         读CFG文件，生成cfg项、LR表、LR项集族
         '''
@@ -65,11 +128,12 @@ class SemanticAnalysis:
         self.LRtable = self.cfg.table
         self.cfgterms = self.cfg.cfgTerms
 
-    def event_get_test_file(self):
+    def set_test_file(self, path):
         '''
         读测试文件，生成TOKEN列表
         '''
-        self.Testfile = 'source/semantic/test/assignment_array.txt' #syp更改测试文件路径
+        # self.Testfile = 'source/semantic/test/assign_simple.txt' #syp更改测试文件路径
+        self.Testfile = path
         self.token_list = Lexical_unit(self.Testfile).getTokenList()
 
     def get_func(self, node):

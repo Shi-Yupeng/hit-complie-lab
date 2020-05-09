@@ -4,5 +4,5 @@ int i;
 i = 3;
 
 while i < 10 do
-	a[3] = i;
+    a[3] = i;
 endwhile
