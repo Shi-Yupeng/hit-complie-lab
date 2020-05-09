@@ -23,13 +23,13 @@ class Generator:
         func = getattr(self, func_name)
         return func
 
-    def gen(self, t1, t2, t3, t4):
+    def gen(self, t1, t2, t3, t4, sanyuanshi):
         '''
         生成一条中间代码
         :param 操作符，运算分量1，运算分量2，结果变量
                 要求都是字符串
         '''
-        self.board.append(t1, t2, t3, t4)
+        self.board.append(t1, t2, t3, t4, sanyuanshi)
 
     def g0_SA(self, SA):
         pass
@@ -82,6 +82,7 @@ class Generator:
         D.type = '(' + D1.type + ')' + 'x' + '(' + D2.type + ')'
         D.width = D1.width + D2.width
         D.addr = D1.addr
+        D.recordaddr = D1.recordaddr
 
     def g5_D(self, D):  # syp
         assert len(D.child) == 6
@@ -97,6 +98,18 @@ class Generator:
         D.type = 'function'
         D.width = 1
         offset = self.board.offset
+        D.recordaddr = offset
+        find = False
+
+        for t in self.board.symble_set:
+            if t.value == idname:
+                id.addr = t.offset
+                find = True
+                break
+        if find:
+            linenumber = id.line_num
+            # print('Error at Line {} :函数变量重复声明{}'.format(str(linenumber),idname))
+            self.board.append_wrong(str(linenumber), '函数变量重复声明: ' + idname)
         self.board.enter(idname, 'function', offset)
         self.board.offset += 1
 
@@ -109,9 +122,35 @@ class Generator:
         value = id.val.split(':')[1]
         type_ = T.type
         offset = self.board.offset
+        if 'record' in str(type_):
+            find = False
+            for t in self.board.symble_set:
+                if t.value == value:
+                    id.addr = t.offset
+                    find = True
+                    break
+            if find:
+                linenumber = id.line_num
+                # print('Error at Line {} :变量重复声明{}'.format(str(linenumber), value))
+                self.board.append_wrong(str(linenumber), '变量重复声明: ' + value)
 
-        self.board.enter(value, type_, offset)
-        self.board.offset += T.width
+            self.board.enter(value, type_, T.recordaddr)
+        else:
+            find = False
+
+            for t in self.board.symble_set:
+                if t.value == value:
+                    id.addr = t.offset
+                    find = True
+                    break
+            if find:
+                linenumber = id.line_num
+                # print('Error at Line {} :变量重复声明{}'.format(str(linenumber), value))
+                self.board.append_wrong(str(linenumber), '变量重复声明: ' + value)
+            self.board.enter(value, type_, offset)
+            self.board.offset += T.width
+        D.recordaddr = offset
+
         D.type = value + 'X' + str(type_)  # 确定了d类型
         D.width = T.width
         D.addr = offset
@@ -136,6 +175,9 @@ class Generator:
         funcD(D)
         T.type = 'record' + '' + '(' + D.type + ')'
         T.width = D.width
+        T.recordaddr = D.recordaddr  # TODO
+
+        # print(T.recordaddr)
 
     def g9_X(self, X):  # syp
         assert len(X.child) == 1
@@ -181,8 +223,9 @@ class Generator:
                 break
         if not find:
             # raise Exception('函数变量未声明', idname)
-            print('函数变量未声明')
-        self.board.append('=', E.addr, '-', idname)
+            # print('函数变量未声明')
+            self.board.append_wrong(id.line_num, '变量' + idname + '未声明')
+        self.board.append('=', E.addr, '-', idname, idname + ' = ' + E.addr)
 
     # S==>L=E; 数组
     def g14_S(self, S):
@@ -194,7 +237,8 @@ class Generator:
         func = self.get_func(E)
         func(E)
 
-        self.board.append('[]=', E.addr, str(L.array_base), L.offset)
+        self.board.append('[]=', E.addr, L.name, L.offset,
+                          L.name + '[' + L.offset + ']' + ' = ' + E.addr)
 
     # L==>id[E] 数组
     def g15_L(self, L):
@@ -204,22 +248,33 @@ class Generator:
 
         id = L.child[0]
         idname = id.val.split(':')[1]
+        line_num = id.line_num
         find = False
         for t in self.board.symble_set:
             if t.type_ != str and t.value == idname:
+                id = t
                 L.array = t.type_
                 L.array_base = t.offset
+                L.name = idname
                 find = True
                 break
         if not find:
             # raise Exception('函数变量未声明', idname)
-            print('函数变量未声明')
+            # print('函数变量未声明')
+            self.board.append_wrong(id.line_num, '变量' + idname + '未声明')
+        # 数组下标为float
         if E.type != 'int':
             # raise Exception('数组下标不能引用浮点数', E.addr)
-            print('数组下标不能引用浮点数')
-        L.type = L.array.elem
+            # print('数组下标不能引用浮点数')
+            self.board.append_wrong(E.line_num, '数组下标不能为浮点数: ' + str(E.addr))
+        # 非数组元素使用下标
+        if id.type_ == 'int' or id.type_ == 'real':
+            L.type = id.type_
+            L.addr = id.value
+            self.board.append_wrong(line_num, '对非数组元素使用下标访问: ' + idname)
+            return
 
-        type = L.array.elem
+        type = L.array
         while True:
             if type == 'int':
                 L.width = 4
@@ -227,9 +282,14 @@ class Generator:
             elif type == 'real':
                 L.width = 8
                 break
+            if type.elem == 'int' or type.elem == 'real':
+                L.type = type
             type = type.elem
+
         L.offset = self.board.new_temp()
-        self.board.append('*', E.addr, str(L.width), L.offset)
+        L.addr = id.value
+        self.board.append('*', E.addr, str(L.width), L.offset,
+                          L.offset + '=' + E.addr + ' * ' + str(L.width))
 
     # L==>L1[E] 数组
     def g16_L(self, L):
@@ -240,16 +300,35 @@ class Generator:
         E = L.child[2]
         func = self.get_func(E)
         func(E)
-        L.type = L1.type.elem
+
+        # 非数组元素使用下标
+        if L1.type == 'int' or L1.type == 'real':
+            # self.board.append_wrong(L1.line_num, '对非数组元素使用下标访问: ' + L1.addr)
+            L.addr = L1.addr
+            L.type = L1.type
+            L.name = L1.name
+            return
+        # 找到L1类型的外层类型
+        t = L1.array
+
+        while True:
+            if t.elem == L1.type:
+                L.type = t
+                break
+            t = t.elem
         L.array = L1.array
+        L.addr = L1.addr
         L.array_base = L1.array_base
+        L.name = L1.name
         t = self.board.new_temp()
         if E.type != 'int':
             # raise Exception('数组下标不能引用浮点数', E.addr)
-            print('数组下标不能引用浮点数')
-        self.board.append('*', E.addr, str(L.array.elem.get_length()), t)
+            self.board.append_wrong(E.line_num, '数组下标不能为浮点数: ' + str(E.addr))
+
+        self.board.append('*', E.addr, str(L1.type.get_length()), t,
+                          t + ' = ' + E.addr + ' * ' + str(L1.type.get_length()))
         L.offset = self.board.new_temp()
-        self.board.append('+', L1.offset, t, L.offset)
+        self.board.append('+', L1.offset, t, L.offset, L.offset + ' = ' + L1.offset + ' + ' + t)
 
     # E==>E1+E2
     def g17_E(self, E):
@@ -264,18 +343,24 @@ class Generator:
         E.addr = self.board.new_temp()
         if E1.type == E2.type:
             E.type = E1.type
-            self.board.append('+', E1.addr, E2.addr, E.addr)
+            self.board.append('+', E1.addr, E2.addr, E.addr, E.addr + ' = ' + E1.addr + ' + ' + E2.addr)
         # 类型不匹配
         elif E2.type == 'real':
             E.type = E2.type
             u = self.board.new_temp()
-            self.board.append('inttoreal', E1.addr, '-', u)
-            self.board.append('+', u, E2.addr, E.addr)
+            self.board.append_wrong(E.line_num,
+                                    '类型不匹配: ' + str(E1.addr) + ':' + str(E1.type) + ' ' + str(
+                                        E2.addr) + ':' + str(E2.type))
+            self.board.append('inttoreal', E1.addr, '-', u, u + ' = ' + '(inttoreal)' + E1.addr)
+            self.board.append('+', u, E2.addr, E.addr, E.addr + ' = ' + u + ' + ' + E2.addr)
         else:
             E.type = E1.type
             u = self.board.new_temp()
-            self.board.append('inttoreal', E2.addr, '-', u)
-            self.board.append('+', E1.addr, u, E.addr)
+            self.board.append_wrong(E.line_num,
+                                    '类型不匹配: ' + str(E1.addr) + ':' + str(E1.type) + ' ' + str(
+                                        E2.addr) + ':' + str(E2.type))
+            self.board.append('inttoreal', E2.addr, '-', u, u + ' = ' + '(inttoreal)' + E2.addr)
+            self.board.append('+', E1.addr, u, E.addr, E.addr + ' = ' + E1.addr + ' + ' + u)
 
     # E==>E1*E2
     def g18_E(self, E):
@@ -290,18 +375,24 @@ class Generator:
         E.addr = self.board.new_temp()
         if E1.type == E2.type:
             E.type = E1.type
-            self.board.append('*', E1.addr, E2.addr, E.addr)
+            self.board.append('*', E1.addr, E2.addr, E.addr, E.addr + ' = ' + E1.addr + ' * ' + E2.addr)
         # 类型不匹配
         elif E2.type == 'real':
             E.type = E2.type
             u = self.board.new_temp()
-            self.board.append('inttoreal', E1.addr, '-', u)
-            self.board.append('*', u, E2.addr, E.addr)
+            self.board.append_wrong(E.line_num,
+                                    '类型不匹配: ' + str(E1.addr) + ':' + str(E1.type) + ' ' + str(
+                                        E2.addr) + ':' + str(E2.type))
+            self.board.append('inttoreal', E1.addr, '-', u, u + ' = ' + '(inttoreal)' + E1.addr)
+            self.board.append('*', u, E2.addr, E.addr, E.addr + ' = ' + u + ' * ' + E2.addr)
         else:
             E.type = E1.type
             u = self.board.new_temp()
-            self.board.append('inttoreal', E2.addr, '-', u)
-            self.board.append('*', E1.addr, u, E.addr)
+            self.board.append_wrong(E.line_num,
+                                    '类型不匹配: ' + str(E1.addr) + ':' + str(E1.type) + ' ' + str(
+                                        E2.addr) + ':' + str(E2.type))
+            self.board.append('inttoreal', E2.addr, '-', u, u + ' = ' + '(inttoreal)' + E2.addr)
+            self.board.append('*', E1.addr, u, E.addr, E.addr + ' = ' + E1.addr + ' * ' + u)
 
     # E==>E1-E2
     def g19_E(self, E):
@@ -316,18 +407,24 @@ class Generator:
         E.addr = self.board.new_temp()
         if E1.type == E2.type:
             E.type = E1.type
-            self.board.append('-', E1.addr, E2.addr, E.addr)
+            self.board.append('-', E1.addr, E2.addr, E.addr, E.addr + ' = ' + E1.addr + ' - ' + E2.addr)
         # 类型不匹配
         elif E2.type == 'real':
             E.type = E2.type
             u = self.board.new_temp()
-            self.board.append('inttoreal', E1.addr, '-', u)
-            self.board.append('-', u, E2.addr, E.addr)
+            self.board.append_wrong(E.line_num,
+                                    '类型不匹配: ' + str(E1.addr) + ':' + str(E1.type) + ' ' + str(
+                                        E2.addr) + ':' + str(E2.type))
+            self.board.append('inttoreal', E1.addr, '-', u, u + ' = ' + '(inttoreal)' + E1.addr)
+            self.board.append('-', u, E2.addr, E.addr, E.addr + ' = ' + u + ' - ' + E2.addr)
         else:
             E.type = E1.type
             u = self.board.new_temp()
-            self.board.append('inttoreal', E2.addr, '-', u)
-            self.board.append('-', E1.addr, u, E.addr)
+            self.board.append_wrong(E.line_num,
+                                    '类型不匹配: ' + str(E1.addr) + ':' + str(E1.type) + ' ' + str(
+                                        E2.addr) + ':' + str(E2.type))
+            self.board.append('inttoreal', E2.addr, '-', u, u + ' = ' + '(inttoreal)' + E2.addr)
+            self.board.append('-', E1.addr, u, E.addr, E.addr + ' = ' + E1.addr + ' - ' + u)
 
     # E==>-E1
     def g20_E(self, E):
@@ -337,7 +434,7 @@ class Generator:
 
         E.addr = self.board.new_temp()
         E.type = E1.type
-        self.board.append('-', E1.addr, '-', E.addr)
+        self.board.append('-', E1.addr, '-', E.addr, E.addr + ' = ' + '-' + E1.addr)
 
     # E==>(E1)
     def g21_E(self, E):
@@ -352,6 +449,7 @@ class Generator:
         id = E.child[0]
         find = False
         idname = id.val.split(':')[1]
+        E.name = idname
         for t in self.board.symble_set:
             if t.value == idname:
                 id.addr = t.value
@@ -363,7 +461,8 @@ class Generator:
             E.addr = 'unkonwn'
             E.type = 'unkonwn'
             # raise Exception('函数变量未声明', idname)
-            print('函数变量未声明')
+            # print('函数变量未声明')
+            self.board.append_wrong(id.line_num, '变量' + idname + '未声明')
 
     # E==>digit
     def g23_E(self, E):
@@ -386,7 +485,18 @@ class Generator:
         func(L)
 
         E.addr = self.board.new_temp()
-        self.board.append('=[]', str(L.array_base), L.offset, E.addr)
+        type = L.type
+        while True:
+            if type == 'int' or type == 'real':
+                E.type = type
+                break
+            type = type.elem
+        # 对非数组元素使用下标
+        if L.type == 'int' or L.type == 'real':
+            # self.board.append_wrong(L.line_num, '对非数组元素使用下标访问: ' + L.addr)
+            return
+        self.board.append('=[]', L.name, L.offset, E.addr,
+                          E.addr + ' = ' + L.name + '[' + L.offset + ']')
 
     def g26_S(self, S):
         # S -> if B then S endif
@@ -425,7 +535,7 @@ class Generator:
         func = self.get_func(S1)
         func(S1)
 
-        self.gen('goto', '-', '-', S.inh['next'])
+        self.gen('goto', '-', '-', S.inh['next'], 'goto ' + S.inh['next'])
         self.board.label(B.inh['false'])
         S2.inh['next'] = S.inh['next']
 
@@ -452,7 +562,7 @@ class Generator:
         func = self.get_func(S1)
         func(S1)
 
-        self.gen('goto', '-', '-', S.inh['begin'])
+        self.gen('goto', '-', '-', S.inh['begin'], 'goto ' + S.inh['begin'])
 
     def g29_B(self, B):
         # B -> B || B
@@ -530,18 +640,19 @@ class Generator:
         func = self.get_func(E2)
         func(E2)
 
-        self.gen(RE.syn['relop'], E1.addr, E2.addr, B.inh['true'])
-        self.gen('goto', '-', '-', B.inh['false'])
+        self.gen(RE.syn['relop'], E1.addr, E2.addr, B.inh['true'],
+                 'if ' + E1.addr + ' ' + RE.syn['relop'] + ' ' + E2.addr + ', goto ' + B.inh['true'])
+        self.gen('goto', '-', '-', B.inh['false'], 'goto ' + B.inh['false'])
 
     def g34_B(self, B):
         # B -> true
         assert len(B.child) == 1
-        self.gen('goto', '-', '-', B.inh['true'])
+        self.gen('goto', '-', '-', B.inh['true'], 'goto ' + B.inh['true'])
 
     def g35_B(self, B):
         # B -> false
         assert len(B.child) == 1
-        self.gen('goto', '-', '-', B.inh['false'])
+        self.gen('goto', '-', '-', B.inh['false'], 'goto ' + B.inh['false'])
 
     def g36_RE(self, RE):
         # RE -> <
@@ -583,7 +694,8 @@ class Generator:
         if self.board.Q != None:
             for t in self.board.Q:
                 cnt += 1
-                self.board.append('param', str(t), '_', '_')
+                sanyuanshi = 'param  {}'.format(str(t))
+                self.board.append('param', str(t), '_', '_', sanyuanshi)
         find = False
         idname = id.val.split(':')[1]
         for t in self.board.symble_set:
@@ -593,13 +705,19 @@ class Generator:
                 break
         if not find:
             # raise Exception('函数变量未声明', idname)
-            print('函数变量未声明')
-        self.board.append('call', str(id.addr), str(cnt), '_')
+            # print('函数变量未声明')
+            self.board.append_wrong(id.line_num, '函数变量' + idname + '未声明')
+        elif t.type_ != 'function':
+            # print('对非函数变量进行调用:{}'.format(idname))
+            self.board.append_wrong(id.line_num, '对非函数变量进行调用: ' + idname)
+        sanyuanshi = 'call {},{}'.format(idname, str(cnt))
+        self.board.append('call', str(id.addr), str(cnt), '_', sanyuanshi)
 
-    def g43_ELIST(self, ELIST):  # syp
-        assert len(ELIST.child) == 3
-        ELIST = ELIST.child[0]
-        E = ELIST.child[2]
+    def g43_ELIST(self, ELISTf):  # syp
+        assert len(ELISTf.child) == 3
+        ELIST = ELISTf.child[0]
+
+        E = ELISTf.child[2]
 
         funELIST = self.get_func(ELIST)
         funELIST(ELIST)

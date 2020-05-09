@@ -18,6 +18,8 @@ class ParseTree:
         self.array = None# wc数组名(综合属性)
         self.offset = None#wc数组元素的偏移量(综合属性)
         self.array_base = None#数组基地址(综合属性)
+        self.name = None# 用于记录数组名称(综合属性)
+        self.recordaddr = None #用于record形记录的起始位置
 
         self.inh = {} # 继承属性
         self.syn = {} # 综合属性

@@ -1,3 +1,6 @@
+import re
+
+
 def main():
     pass
 
@@ -8,6 +11,11 @@ class SymbleTerm():  # syp 符号表中的一项
         self.value = value  # 值
         self.type_ = type_  # 类型
         self.offset = offset  # 内存偏移量
+
+    def __str__(self):
+        ret = 'value: {:>10} | type: {:>30} | offset: {:>10}'.format(str(self.value), str(self.type_), str(self.offset))
+        # ret = 'value: ' + str(self.value) + 'type: ' + str(self.type_) + 'offset: ' + str(self.offset)
+        return ret
 
 
 class Board:
@@ -29,12 +37,14 @@ class Board:
         self.w = None  # syp 用于SDT设计时的临时变量
         self.Q = None  # syp 用于SDT设计时的临时变量
         self.symble_set = []  # syp符号表，中间数据是SymbleTerm类型
-        self.string = None
+        self.wrong_list = [] # wc 错误列表
+        self.string = None # 存放打印用字符串
 
     def enter(self, value, type_, offset):  # syp 在符号表中添加条目，并且添加到四元式代码中
         ST = SymbleTerm(value, type_, offset)
         self.symble_set.append(ST)
-        self.append('enter', value, str(type_), str(offset))
+        sanyuanshi = 'enter({},{},{})'.format(value, str(type_), str(offset))
+        self.append('enter', value, str(type_), str(offset),sanyuanshi)
 
     def show_result(self):
         '''
@@ -42,8 +52,8 @@ class Board:
         '''
         for i in self.content:
             print(
-                '{:3}: {:>10}, {:>25}, {:>25}, {:>10}'.format(i, self.content[i][0], self.content[i][1],
-                                                          self.content[i][2], self.content[i][3]))
+                '{:3}: {:>10}, {:>25}, {:>25}, {:>20},      {}'.format(i, self.content[i][0], self.content[i][1],
+                                                          self.content[i][2], self.content[i][3], self.content[i][4]))
         print('{:3}:'.format(self.line_cnt))
 
     def get_result(self):
@@ -55,11 +65,21 @@ class Board:
         else:
             self.string = ''
             for i in self.content:
-                self.string += '{:>10}, {:>15}, {:>15}, {:>15}\n'.format(self.content[i][0], self.content[i][1],
-                                                                       self.content[i][2], self.content[i][3])
+                self.string += '{:>10}, {:>15}, {:>20}, {:>10}, {:>25}\n'.format(
+                    self.content[i][0], self.content[i][1], self.content[i][2], self.content[i][3],
+                    self.content[i][4])
             return self.string
 
-    def append(self, t1, t2, t3, t4):
+    def get_table(self):
+        '''
+        获得表示符号表的自妇产
+        '''
+        ret = ''
+        for i in self.symble_set:
+            ret += str(i) + '\n'
+        return ret
+
+    def append(self, t1, t2, t3, t4, sanyuanshi):
         '''
         添加
         :param t1: 操作符
@@ -72,9 +92,29 @@ class Board:
         assert isinstance(t2, str)
         assert isinstance(t3, str)
         assert isinstance(t4, str)
+        assert isinstance(sanyuanshi, str)
 
-        self.content[self.line_cnt] = [t1, t2, t3, t4]
+        self.content[self.line_cnt] = [t1, t2, t3, t4, sanyuanshi]
         self.line_cnt += 1
+
+    def append_wrong(self, line_number, massage):
+        '''
+        添加报错
+        :param line_number: 行号
+        :param massage: 错误说明
+        '''
+        string = 'Error at Line [' + str(line_number) + ']：[' + str(massage) + ']'
+        self.wrong_list.append(string)
+
+    def show_wrong(self):
+        '''
+        输出错误记录
+        '''
+        for i in self.wrong_list:
+            print(i)
+
+    def get_wrong(self):
+        return self.wrong_list
 
     def next_line_num(self):
         '''
@@ -94,10 +134,10 @@ class Board:
 
     def new_temp(self):
         '''
-        生成一个新标号  格式：Lb_1, Lb_2, Lb_3, ...
+        生成一个新标号  格式：t1, t2, t3, ...
         :return: 生成的新标号
         '''
-        ret = 'temp_' + str(self.temp_cnt)
+        ret = 't' + str(self.temp_cnt)
         self.temp_cnt += 1
         return ret
 
@@ -123,6 +163,13 @@ class Board:
         for i in self.content:
             if 'Lb' in self.content[i][3]:
                 self.content[i][3] = self.label_dic[self.content[i][3]]
+            pat = '.*goto (Lb_\d+).*'
+            m = re.match(pat, self.content[i][4])
+            if m != None:
+                lb = m.group(1)
+                self.content[i][4] = self.content[i][4].replace(lb, str(self.label_dic[lb]))
+            # if 'Lb' in self.content[i][4]:
+            #     self.content[i][4] = self.content[i][4].replace('')
 
 
 if __name__ == '__main__':

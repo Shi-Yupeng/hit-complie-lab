@@ -1,5 +1,13 @@
-if true && false then
-    a = 1;
+int a;
+int b;
+int c;
+
+a = 1;
+b = 2;
+c = 3;
+
+if (true && a < b) || (a > c && a == b) then
+	a = 1;
 else
-    a = 2;
+	a = 2;
 endif

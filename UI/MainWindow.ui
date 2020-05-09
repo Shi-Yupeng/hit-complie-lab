@@ -316,110 +316,6 @@
     <attribute name="title">
      <string>语义分析</string>
     </attribute>
-    <widget class="QSplitter" name="splitter_3">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>991</width>
-       <height>511</height>
-      </rect>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <widget class="QSplitter" name="splitter">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <widget class="QPushButton" name="semantic_lb_import">
-       <property name="text">
-        <string>导入源程序</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_7">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>源程序</string>
-       </property>
-      </widget>
-      <widget class="QTableWidget" name="semantic_table_source">
-       <property name="font">
-        <font>
-         <family>Consolas</family>
-        </font>
-       </property>
-       <property name="columnCount">
-        <number>1</number>
-       </property>
-       <attribute name="horizontalHeaderVisible">
-        <bool>false</bool>
-       </attribute>
-       <attribute name="horizontalHeaderMinimumSectionSize">
-        <number>25</number>
-       </attribute>
-       <attribute name="horizontalHeaderStretchLastSection">
-        <bool>true</bool>
-       </attribute>
-       <attribute name="verticalHeaderMinimumSectionSize">
-        <number>20</number>
-       </attribute>
-       <attribute name="verticalHeaderDefaultSectionSize">
-        <number>15</number>
-       </attribute>
-       <column/>
-      </widget>
-     </widget>
-     <widget class="QSplitter" name="splitter_2">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <widget class="QPushButton" name="semantic_lb_generate">
-       <property name="text">
-        <string>生成！</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_8">
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>中间代码</string>
-       </property>
-      </widget>
-      <widget class="QTableWidget" name="semantic_table_out">
-       <property name="font">
-        <font>
-         <family>Consolas</family>
-        </font>
-       </property>
-       <property name="columnCount">
-        <number>1</number>
-       </property>
-       <attribute name="horizontalHeaderVisible">
-        <bool>false</bool>
-       </attribute>
-       <attribute name="horizontalHeaderStretchLastSection">
-        <bool>true</bool>
-       </attribute>
-       <attribute name="verticalHeaderMinimumSectionSize">
-        <number>9</number>
-       </attribute>
-       <attribute name="verticalHeaderDefaultSectionSize">
-        <number>9</number>
-       </attribute>
-       <column/>
-      </widget>
-     </widget>
-    </widget>
     <widget class="QSplitter" name="splitter_4">
      <property name="geometry">
       <rect>
@@ -444,6 +340,118 @@
       </property>
      </widget>
      <widget class="QTextBrowser" name="semantic_text_error"/>
+    </widget>
+    <widget class="QSplitter" name="splitter">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>251</width>
+       <height>501</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <widget class="QPushButton" name="semantic_lb_import">
+      <property name="text">
+       <string>导入源程序</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>源程序</string>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="semantic_table_source">
+      <property name="font">
+       <font>
+        <family>Consolas</family>
+       </font>
+      </property>
+      <property name="columnCount">
+       <number>1</number>
+      </property>
+      <attribute name="horizontalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="horizontalHeaderMinimumSectionSize">
+       <number>25</number>
+      </attribute>
+      <attribute name="horizontalHeaderStretchLastSection">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderMinimumSectionSize">
+       <number>20</number>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>20</number>
+      </attribute>
+      <column/>
+     </widget>
+    </widget>
+    <widget class="QSplitter" name="splitter_2">
+     <property name="geometry">
+      <rect>
+       <x>264</x>
+       <y>20</y>
+       <width>731</width>
+       <height>501</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <widget class="QPushButton" name="semantic_lb_generate">
+      <property name="text">
+       <string>生成！</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_8">
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>中间代码</string>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="semantic_table_out">
+      <property name="font">
+       <font>
+        <family>Consolas</family>
+       </font>
+      </property>
+      <property name="columnCount">
+       <number>1</number>
+      </property>
+      <attribute name="horizontalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="horizontalHeaderStretchLastSection">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderMinimumSectionSize">
+       <number>9</number>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>9</number>
+      </attribute>
+      <column/>
+     </widget>
+     <widget class="QPushButton" name="semantic_lb_symble">
+      <property name="text">
+       <string>查看符号表</string>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

@@ -1,6 +1,6 @@
 def inc:
     int f;
-    real[2] g;
+    real[2][4] g;
     g = g + f;
     enddef
 int i;
@@ -8,5 +8,7 @@ int [2][3] a;
 real b;
 record
     int[2] c;
+    real[3][5] d;
 endrecord student;
-call inc();
+call inc(i*b);
+call inc(i, b);

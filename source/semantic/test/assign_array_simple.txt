@@ -1,3 +1,5 @@
 int[5] arr;
+int a;
 
 arr[2] = 3;
+a = arr[1];

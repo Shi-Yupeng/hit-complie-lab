@@ -1,0 +1,27 @@
+def inc:
+    int f;
+    int f; /*变量重复声明(syp)*/
+    real[2][4] g;
+    g = g + f;
+    enddef
+def inc:  /*函数重复声明(syp)*/
+    int new;
+    new = fake * new;  /*变量引用前未声明(wc)*/
+    enddef
+int i;
+int [2][3] a;
+int e;
+real b;
+record
+    int[2] c;
+    real[3][5] d;
+endrecord student;
+
+b = c + d; /*运算符和运算分量之间的类型不匹配(wc)*/
+b = e[2][3]; /*对非数组型变量使用数组访问操作符(wc)*/
+b = f[1.2]; /*数组访问操作符中出现非整数等(wc)*/
+
+call inc(i*b);
+call inc(i, b);
+call i();  /*对普通变量使用过程调用操作符(syp)*/
+call myfun(); /*函数引用前未声明(syp)*/

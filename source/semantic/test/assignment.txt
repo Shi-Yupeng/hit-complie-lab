@@ -1,9 +1,16 @@
 int a;
 int b;
 real c;
+int d;
 int[5][5] e;
 int[10] arr;
+int[10][10][10] f;
+int i;
+int j;
+int x;
 
+i = 2;
+j = 3;
 x=(((a+b)*c)-d)*(2-1.5);
 e[0][2] = x;
 e[1][1] = e[0][2];
@@ -11,3 +18,4 @@ a=e[3][9];
 b=e[2][1.5];
 a = arr[9];
 arr[8] = 2;
+f[i][j][a] = b;
