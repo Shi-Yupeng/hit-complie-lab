@@ -1,9 +1,10 @@
 import sys
 import traceback
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
+
 from UI.MainWindow import Ui_Form
 from UI.SymbleTable import Ui_Form as UiSymbleTable
-
 from syntax.LRCFG import LRCFG
 from syntax.LexicalUnit import Lexical_unit
 from syntax.ParseTree import ParseTree
@@ -34,6 +35,7 @@ class Main(QMainWindow):
         self.main_window.semantic_lb_import.clicked.connect(self.import_source_file)
         self.main_window.semantic_lb_generate.clicked.connect(self.generate_code)
         self.main_window.semantic_lb_symble.clicked.connect(self.event_show_symble_table)
+        self.main_window.semantic_lb_3addr.clicked.connect(self.event_show_3addr)
 
     def import_source_file(self):
         fname = QFileDialog.getOpenFileName(self, caption='Open file', directory='.')
@@ -56,6 +58,7 @@ class Main(QMainWindow):
 
     def generate_code(self):
         try:
+            self.analyzer.board.clear()
             # 生成中间代码
             self.analyzer.generate()
 
@@ -69,12 +72,21 @@ class Main(QMainWindow):
 
             # 获取错误并输出
             err_list = self.analyzer.board.get_wrong()
+            self.main_window.semantic_text_error.clear()
             for err in err_list:
                 self.main_window.semantic_text_error.append(err)
         except Exception:
             exstr = traceback.format_exc()
             self.main_window.semantic_text_error.append(exstr)
             print(exstr)
+
+    def event_show_3addr(self):
+        ans = self.analyzer.board.get_3addr()
+        lines = ans.split('\n')
+        self.main_window.semantic_table_out.clear()
+        self.main_window.semantic_table_out.setRowCount(len(lines))
+        for i in range(len(lines)):
+            self.main_window.semantic_table_out.setItem(i, 0, QTableWidgetItem(lines[i]))
 
     def event_show_symble_table(self):
         try:

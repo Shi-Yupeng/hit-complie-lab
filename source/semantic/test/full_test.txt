@@ -1,0 +1,76 @@
+/*声明*/
+int a;
+int b;
+real c;
+int d;
+int[5][5] e;
+int[10] arr;
+int[10][10][10] f;
+int i;
+int j;
+int x;
+def inc:
+    real h;
+    real[2][4] g;
+    g[1][2] = g[1][3] + h;
+    enddef
+record
+    int[2] l;
+    real[3][5] m;
+endrecord student;
+
+/*错误声明*/
+def inc:
+    int n;
+    int n; /*变量重复声明*/
+    real[2][4] y;
+    n = n+1;
+    enddef
+def inc:  /*函数重复声明*/
+    int new;
+    new = fake * new;  /*变量引用前未声明*/
+    enddef
+
+record
+    int[2] theta;
+    real[3][5] beta;
+endrecord student;
+
+d = e[2+p][2];
+/*赋值*/
+i = 2;
+j = 3;
+x=(((a+b)*c)-d)*(2-1.5);
+e[0][2] = x;
+e[1][1] = e[0][2];
+a=e[3][9];
+b=e[2][1.5];
+a = arr[9];
+arr[8] = 2;
+f[i][j][a] = b;
+/*错误赋值*/
+b = c + d; /*运算符和运算分量之间的类型不匹配*/
+b = e[2][3]; /*对非数组型变量使用数组访问操作符(wc)*/
+b = f[1.2]; /*数组访问操作符中出现非整数等(wc)*/
+
+/*控制*/
+if (true && a < b) || (a > c && a == b) then
+	a = 1;
+else
+	a = 2;
+endif
+if (true && a < b) || (a > c && a == b) then
+	a = 1;
+endif
+while a == 1 && c > a && e[2][2] > 10 do
+	b = 1;
+	e[3][3] = 9;
+endwhile
+
+/*调用*/
+call inc(i*b);
+call inc(i, b);
+/*错误调用*/
+call i();  /*对普通变量使用过程调用操作符*/
+call myfun(); /*函数引用前未声明*/
+

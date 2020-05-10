@@ -1,6 +1,0 @@
-在syp代码的基础上进行添加的
-1，在CodeGenerator.py添加赋值和数组的SDT函数，包括类型转换
-2，Board.py添加new_temp函数，生成临时变量
-3，在ParseTree.py添加一些属性
-4，在ShiftReduce.py移入时添加对float类型数字的判断
-5，添加测试文件assignment.txt

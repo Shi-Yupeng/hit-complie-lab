@@ -13,7 +13,9 @@ class SymbleTerm():  # syp 符号表中的一项
         self.offset = offset  # 内存偏移量
 
     def __str__(self):
-        ret = 'value: {:>10} | type: {:>30} | offset: {:>10}'.format(str(self.value), str(self.type_), str(self.offset))
+        ret = 'value: {:>10} | type: {:>30} | offset: {:>10}'.format(str(self.value),
+                                                                     str(self.type_),
+                                                                     str(self.offset))
         # ret = 'value: ' + str(self.value) + 'type: ' + str(self.type_) + 'offset: ' + str(self.offset)
         return ret
 
@@ -37,14 +39,14 @@ class Board:
         self.w = None  # syp 用于SDT设计时的临时变量
         self.Q = None  # syp 用于SDT设计时的临时变量
         self.symble_set = []  # syp符号表，中间数据是SymbleTerm类型
-        self.wrong_list = [] # wc 错误列表
-        self.string = None # 存放打印用字符串
+        self.wrong_list = []  # wc 错误列表
+        self.string = None  # 存放打印用字符串
 
     def enter(self, value, type_, offset):  # syp 在符号表中添加条目，并且添加到四元式代码中
         ST = SymbleTerm(value, type_, offset)
         self.symble_set.append(ST)
         sanyuanshi = 'enter({},{},{})'.format(value, str(type_), str(offset))
-        self.append('enter', value, str(type_), str(offset),sanyuanshi)
+        self.append('enter', value, str(type_), str(offset), sanyuanshi)
 
     def show_result(self):
         '''
@@ -52,8 +54,11 @@ class Board:
         '''
         for i in self.content:
             print(
-                '{:3}: {:>10}, {:>25}, {:>25}, {:>20},      {}'.format(i, self.content[i][0], self.content[i][1],
-                                                          self.content[i][2], self.content[i][3], self.content[i][4]))
+                '{:3}: {:>10}, {:>25}, {:>25}, {:>20},      {}'.format(i, self.content[i][0],
+                                                                       self.content[i][1],
+                                                                       self.content[i][2],
+                                                                       self.content[i][3],
+                                                                       self.content[i][4]))
         print('{:3}:'.format(self.line_cnt))
 
     def get_result(self):
@@ -65,14 +70,26 @@ class Board:
         else:
             self.string = ''
             for i in self.content:
-                self.string += '{:>10}, {:>15}, {:>20}, {:>10}, {:>25}\n'.format(
+                self.string += '({:>10}, {:>10}, {:>10}, {:>10}), {:>20}\n'.format(
                     self.content[i][0], self.content[i][1], self.content[i][2], self.content[i][3],
                     self.content[i][4])
             return self.string
 
+    def get_3addr(self):
+        '''
+        生成中间代码后，获取三地址指令序列
+        '''
+        if self.string != None:
+            self.string = ''
+            for i in self.content:
+                self.string += self.content[i][4] + '\n'
+            return self.string
+        else:
+            pass
+
     def get_table(self):
         '''
-        获得表示符号表的自妇产
+        获得表示符号表的自符
         '''
         ret = ''
         for i in self.symble_set:
@@ -131,11 +148,19 @@ class Board:
         self.label_cnt = 1
         self.label_dic.clear()
         self.string = None
+        self.temp_cnt = 0
+        self.symble_set.clear()
+        self.wrong_list.clear()
+        self.offset = None
+        self.t = None
+        self.w = None
+        self.Q = None
+        self.string = None
 
     def new_temp(self):
         '''
         生成一个新标号  格式：t1, t2, t3, ...
-        :return: 生成的新标号
+        :return: 生成的新的变量
         '''
         ret = 't' + str(self.temp_cnt)
         self.temp_cnt += 1

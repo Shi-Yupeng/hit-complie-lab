@@ -1,7 +1,6 @@
 '''
 该模块定义了递归产生中间代码的各个产生式的SDT
 '''
-from lexical import Token_
 from .array_ import Array
 
 
@@ -59,7 +58,8 @@ class Generator:
         assert len(S.child) == 2
         S1 = S.child[0]
         S2 = S.child[1]
-
+        S1.symbel_set_name = S.symbel_set_name
+        S2.symbel_set_name = S.symbel_set_name
         S1.inh['next'] = self.board.new_label()
 
         func1 = self.get_func(S1)
@@ -75,6 +75,8 @@ class Generator:
         assert len(D.child) == 2
         D1 = D.child[0]
         D2 = D.child[1]
+        D1.symbel_set_name = D.symbel_set_name
+        D2.symbel_set_name = D.symbel_set_name
         func1 = self.get_func(D1)
         func2 = self.get_func(D2)
         func1(D1)
@@ -89,7 +91,10 @@ class Generator:
         D1 = D.child[3]
         S = D.child[4]
         id = D.child[1]
-        idname = id.val.split(':')[1]
+        idname = D.symbel_set_name + id.val.split(':')[1]
+        D.symbel_set_name = idname + '_'
+        D1.symbel_set_name = D.symbel_set_name
+        S.symbel_set_name = D.symbel_set_name
         funD1 = self.get_func(D1)
         funD1(D1)
         funS = self.get_func(S)
@@ -116,10 +121,11 @@ class Generator:
     def g6_D(self, D):  # syp
         assert len(D.child) == 3
         T = D.child[0]
+        T.symbel_set_name = D.symbel_set_name
         id = D.child[1]
         func = self.get_func(T)
         func(T)
-        value = id.val.split(':')[1]
+        value = D.symbel_set_name + id.val.split(':')[1]
         type_ = T.type
         offset = self.board.offset
         if 'record' in str(type_):
@@ -158,11 +164,13 @@ class Generator:
     def g7_T(self, T):  # syp
         assert len(T.child) == 2
         X = T.child[0]
+        X.symbel_set_name = T.symbel_set_name
         funcX = self.get_func(X)
         funcX(X)
         self.board.t = X.type
         self.board.w = X.width
         C = T.child[1]
+        C.symbel_set_name = T.symbel_set_name
         funcC = self.get_func(C)
         funcC(C)
         T.type = C.type
@@ -171,6 +179,7 @@ class Generator:
     def g8_T(self, T):  # syp
         assert len(T.child) == 3
         D = T.child[1]
+        D.symbel_set_name = T.symbel_set_name
         funcD = self.get_func(D)
         funcD(D)
         T.type = 'record' + '' + '(' + D.type + ')'
@@ -209,13 +218,14 @@ class Generator:
     # S==>id=E;
     def g13_S(self, S):
         E = S.child[2]
+        E.symbel_set_name = S.symbel_set_name
         func = self.get_func(E)
         func(E)
 
         # lookup函数
         id = S.child[0]
         find = False
-        idname = id.val.split(':')[1]
+        idname = S.symbel_set_name + id.val.split(':')[1]
         for t in self.board.symble_set:
             if t.value == idname:
                 id.addr = t.value
@@ -230,10 +240,12 @@ class Generator:
     # S==>L=E; 数组
     def g14_S(self, S):
         L = S.child[0]
+        L.symbel_set_name = S.symbel_set_name
         func = self.get_func(L)
         func(L)
 
         E = S.child[2]
+        E.symbel_set_name = S.symbel_set_name
         func = self.get_func(E)
         func(E)
 
@@ -243,12 +255,13 @@ class Generator:
     # L==>id[E] 数组
     def g15_L(self, L):
         E = L.child[2]
+        E.symbel_set_name = L.symbel_set_name
         func = self.get_func(E)
         func(E)
 
-        id = L.child[0]
-        idname = id.val.split(':')[1]
-        line_num = id.line_num
+        tid = L.child[0]
+        idname = L.symbel_set_name + tid.val.split(':')[1]
+        line_num = tid.line_num
         find = False
         for t in self.board.symble_set:
             if t.type_ != str and t.value == idname:
@@ -261,7 +274,7 @@ class Generator:
         if not find:
             # raise Exception('函数变量未声明', idname)
             # print('函数变量未声明')
-            self.board.append_wrong(id.line_num, '变量' + idname + '未声明')
+            self.board.append_wrong(tid.line_num, '变量' + idname + '未声明')
         # 数组下标为float
         if E.type != 'int':
             # raise Exception('数组下标不能引用浮点数', E.addr)
@@ -289,15 +302,17 @@ class Generator:
         L.offset = self.board.new_temp()
         L.addr = id.value
         self.board.append('*', E.addr, str(L.width), L.offset,
-                          L.offset + '=' + E.addr + ' * ' + str(L.width))
+                          L.offset + ' = ' + E.addr + ' * ' + str(L.width))
 
     # L==>L1[E] 数组
     def g16_L(self, L):
         L1 = L.child[0]
+        L1.symbel_set_name = L.symbel_set_name
         func = self.get_func(L1)
         func(L1)
 
         E = L.child[2]
+        E.symbel_set_name = L.symbel_set_name
         func = self.get_func(E)
         func(E)
 
@@ -333,17 +348,20 @@ class Generator:
     # E==>E1+E2
     def g17_E(self, E):
         E1 = E.child[0]
+        E1.symbel_set_name = E.symbel_set_name
         func = self.get_func(E1)
         func(E1)
 
         E2 = E.child[2]
+        E2.symbel_set_name = E.symbel_set_name
         func = self.get_func(E2)
         func(E2)
 
         E.addr = self.board.new_temp()
         if E1.type == E2.type:
             E.type = E1.type
-            self.board.append('+', E1.addr, E2.addr, E.addr, E.addr + ' = ' + E1.addr + ' + ' + E2.addr)
+            self.board.append('+', E1.addr, E2.addr, E.addr,
+                              E.addr + ' = ' + E1.addr + ' + ' + E2.addr)
         # 类型不匹配
         elif E2.type == 'real':
             E.type = E2.type
@@ -365,17 +383,20 @@ class Generator:
     # E==>E1*E2
     def g18_E(self, E):
         E1 = E.child[0]
+        E1.symbel_set_name = E.symbel_set_name
         func = self.get_func(E1)
         func(E1)
 
         E2 = E.child[2]
+        E2.symbel_set_name = E.symbel_set_name
         func = self.get_func(E2)
         func(E2)
 
         E.addr = self.board.new_temp()
         if E1.type == E2.type:
             E.type = E1.type
-            self.board.append('*', E1.addr, E2.addr, E.addr, E.addr + ' = ' + E1.addr + ' * ' + E2.addr)
+            self.board.append('*', E1.addr, E2.addr, E.addr,
+                              E.addr + ' = ' + E1.addr + ' * ' + E2.addr)
         # 类型不匹配
         elif E2.type == 'real':
             E.type = E2.type
@@ -397,17 +418,20 @@ class Generator:
     # E==>E1-E2
     def g19_E(self, E):
         E1 = E.child[0]
+        E1.symbel_set_name = E.symbel_set_name
         func = self.get_func(E1)
         func(E1)
 
         E2 = E.child[2]
+        E2.symbel_set_name = E.symbel_set_name
         func = self.get_func(E2)
         func(E2)
 
         E.addr = self.board.new_temp()
         if E1.type == E2.type:
             E.type = E1.type
-            self.board.append('-', E1.addr, E2.addr, E.addr, E.addr + ' = ' + E1.addr + ' - ' + E2.addr)
+            self.board.append('-', E1.addr, E2.addr, E.addr,
+                              E.addr + ' = ' + E1.addr + ' - ' + E2.addr)
         # 类型不匹配
         elif E2.type == 'real':
             E.type = E2.type
@@ -429,6 +453,7 @@ class Generator:
     # E==>-E1
     def g20_E(self, E):
         E1 = E.child[1]
+        E1.symbel_set_name = E.symbel_set_name
         func = self.get_func(E1)
         func(E1)
 
@@ -439,6 +464,7 @@ class Generator:
     # E==>(E1)
     def g21_E(self, E):
         E1 = E.child[1]
+        E1.symbel_set_name = E.symbel_set_name
         func = self.get_func(E1)
         func(E1)
         E.addr = E1.addr
@@ -448,7 +474,7 @@ class Generator:
     def g22_E(self, E):
         id = E.child[0]
         find = False
-        idname = id.val.split(':')[1]
+        idname = E.symbel_set_name + id.val.split(':')[1]
         E.name = idname
         for t in self.board.symble_set:
             if t.value == idname:
@@ -481,6 +507,7 @@ class Generator:
     # E==>L 数组
     def g25_E(self, E):
         L = E.child[0]
+        L.symbel_set_name = E.symbel_set_name
         func = self.get_func(L)
         func(L)
 
@@ -503,6 +530,7 @@ class Generator:
         assert len(S.child) == 5
 
         B = S.child[1]
+        B.symbel_set_name = S.symbel_set_name
         B.inh['true'] = self.board.new_label()
         B.inh['false'] = S.inh['next']
 
@@ -510,6 +538,7 @@ class Generator:
         func(B)
 
         S1 = S.child[3]
+        S1.symbel_set_name = S.symbel_set_name
         self.board.label(B.inh['true'])
         S1.inh['next'] = S.inh['next']
 
@@ -522,7 +551,9 @@ class Generator:
         B = S.child[1]
         S1 = S.child[3]
         S2 = S.child[5]
-
+        B.symbel_set_name = S.symbel_set_name
+        S1.symbel_set_name = S.symbel_set_name
+        S2.symbel_set_name = S.symbel_set_name
         B.inh['true'] = self.board.new_label()
         B.inh['false'] = self.board.new_label()
 
@@ -547,7 +578,8 @@ class Generator:
         assert len(S.child) == 5
         B = S.child[1]
         S1 = S.child[3]
-
+        B.symbel_set_name = S.symbel_set_name
+        S1.symbel_set_name = S.symbel_set_name
         S.inh['begin'] = self.board.new_label()
         self.board.label(S.inh['begin'])
         B.inh['true'] = self.board.new_label()
@@ -569,6 +601,7 @@ class Generator:
         assert len(B.child) == 3
 
         B1 = B.child[0]
+        B1.symbel_set_name = B.symbel_set_name
         B1.inh['true'] = B.inh['true']
         B1.inh['false'] = self.board.new_label()
 
@@ -577,6 +610,7 @@ class Generator:
 
         self.board.label(B1.inh['false'])
         B2 = B.child[2]
+        B2.symbel_set_name = B.symbel_set_name
         B2.inh['true'] = B.inh['true']
         B2.inh['false'] = B.inh['false']
 
@@ -588,6 +622,7 @@ class Generator:
         assert len(B.child) == 3
 
         B1 = B.child[0]
+        B1.symbel_set_name = B.symbel_set_name
         B1.inh['true'] = self.board.new_label()
         B1.inh['false'] = B.inh['false']
 
@@ -596,6 +631,7 @@ class Generator:
 
         self.board.label(B1.inh['true'])
         B2 = B.child[2]
+        B2.symbel_set_name = B.symbel_set_name
         B2.inh['true'] = B.inh['true']
         B2.inh['false'] = B.inh['false']
 
@@ -607,6 +643,7 @@ class Generator:
         assert len(B.child) == 2
 
         B1 = B.child[1]
+        B1.symbel_set_name = B.symbel_set_name
         B1.inh['true'] = B.inh['false']
         B1.inh['false'] = B.inh['true']
 
@@ -618,6 +655,7 @@ class Generator:
         assert len(B.child) == 3
 
         B1 = B.child[1]
+        B1.symbel_set_name = B.symbel_set_name
         B1.inh['true'] = B.inh['true']
         B1.inh['false'] = B.inh['false']
 
@@ -628,8 +666,10 @@ class Generator:
         # B -> E RE E
         assert len(B.child) == 3
         E1 = B.child[0]
+        E1.symbel_set_name = B.symbel_set_name
         RE = B.child[1]
         E2 = B.child[2]
+        E2.symbel_set_name = B.symbel_set_name
 
         func = self.get_func(E1)
         func(E1)
@@ -641,7 +681,8 @@ class Generator:
         func(E2)
 
         self.gen(RE.syn['relop'], E1.addr, E2.addr, B.inh['true'],
-                 'if ' + E1.addr + ' ' + RE.syn['relop'] + ' ' + E2.addr + ', goto ' + B.inh['true'])
+                 'if ' + E1.addr + ' ' + RE.syn['relop'] + ' ' + E2.addr + ', goto ' + B.inh[
+                     'true'])
         self.gen('goto', '-', '-', B.inh['false'], 'goto ' + B.inh['false'])
 
     def g34_B(self, B):
@@ -688,6 +729,7 @@ class Generator:
         assert len(S.child) == 6
         id = S.child[1]
         Elist = S.child[3]
+        Elist.symbel_set_name = S.symbel_set_name
         funElist = self.get_func(Elist)
         funElist(Elist)
         cnt = 0
@@ -697,7 +739,7 @@ class Generator:
                 sanyuanshi = 'param  {}'.format(str(t))
                 self.board.append('param', str(t), '_', '_', sanyuanshi)
         find = False
-        idname = id.val.split(':')[1]
+        idname = S.symbel_set_name + id.val.split(':')[1]
         for t in self.board.symble_set:
             if t.value == idname:
                 id.addr = t.offset
@@ -716,9 +758,9 @@ class Generator:
     def g43_ELIST(self, ELISTf):  # syp
         assert len(ELISTf.child) == 3
         ELIST = ELISTf.child[0]
-
+        ELIST.symbel_set_name = ELISTf.symbel_set_name
         E = ELISTf.child[2]
-
+        E.symbel_set_name = ELISTf.symbel_set_name
         funELIST = self.get_func(ELIST)
         funELIST(ELIST)
 
@@ -730,6 +772,7 @@ class Generator:
         child_nodes = ELIST.child
         assert len(child_nodes) == 1
         E = child_nodes[0]
+        E.symbel_set_name = ELIST.symbel_set_name
         funE = self.get_func(E)
         funE(E)  # TODO 衔接位置
         self.board.Q = [E.addr]

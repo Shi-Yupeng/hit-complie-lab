@@ -1,0 +1,19 @@
+int a;
+int b;
+int c;
+real[5] d;
+
+a = 1;
+b = 2;
+c = 3;
+
+if (true && a < b) || (a > c && a == b) then
+	a = 1;
+else
+	a = 2;
+endif
+
+while a == 1 && c > a && d[2] > 10 do
+	b = 1;
+	d[3] = 9;
+endwhile

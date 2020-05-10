@@ -1,15 +1,13 @@
-import os
 import sys
 import traceback
-import pickle as pk
-from syntax.ParseTree import ParseTree
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 
 from UI.MainWindow import Ui_Form
 from UI.CFGDefinition import Ui_Form as CFG_Ui_Form
 from UI.LRtable import Ui_Form as Ui_LRForm
 from UI.FirstForm import Ui_Form as First_Ui_Form
-
+from syntax.ParseTree import ParseTree
 from syntax.LexicalUnit import Lexical_unit
 from syntax.LRCFG import LRCFG
 from syntax.ShiftReduce import ShiftReduce

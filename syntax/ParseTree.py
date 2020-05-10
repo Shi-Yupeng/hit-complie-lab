@@ -14,6 +14,7 @@ class ParseTree:
         self.type = None#spy类型
         self.width = None#spy宽度
         self.addr = None #spy地址值
+        self.symbel_set_name = "global_"  # 符号表名
 
         self.array = None# wc数组名(综合属性)
         self.offset = None#wc数组元素的偏移量(综合属性)
